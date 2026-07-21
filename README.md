@@ -99,7 +99,7 @@ DJI Air Unit side:
 | DJI Air Unit Pin | Connects To |
 | --- | --- |
 | VCC | External Air Unit power positive |
-| GND | External Air Unit power negative and receiver ground |
+| GND | External Air Unit power negative AND receiver ground |
 | RX | Receiver Output 2 `S` / TX |
 | TX | Receiver Output 3 `S` / RX |
 | SBUS | Not used |
