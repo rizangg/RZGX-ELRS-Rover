@@ -1,66 +1,202 @@
-![Banner](https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/banner.png?raw=true)
+# RZGX Rover-ELRS Controller
 
-<center>
+RZGX Rover-ELRS Controller is an experimental ExpressLRS fork for RC ground
+vehicles. It keeps a PWM receiver working as the vehicle receiver/controller,
+while also sending a lightweight DJI MSP DisplayPort OSD directly to a DJI
+O3/O4 Air Unit.
 
-[![Release](https://img.shields.io/github/v/release/ExpressLRS/ExpressLRS?style=flat-square)](https://github.com/ExpressLRS/ExpressLRS/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/ExpressLRS/ExpressLRS/build.yml?logo=github&style=flat-square)](https://github.com/ExpressLRS/ExpressLRS/actions)
-[![License](https://img.shields.io/github/license/ExpressLRS/ExpressLRS?style=flat-square)](https://github.com/ExpressLRS/ExpressLRS/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/ExpressLRS/ExpressLRS?style=flat-square)](https://github.com/ExpressLRS/ExpressLRS/stargazers)
-[![Chat](https://img.shields.io/discord/596350022191415318?color=%235865F2&logo=discord&logoColor=%23FFFFFF&style=flat-square)](https://discord.gg/expresslrs)
+This project is focused on RC rovers, crawlers, trail trucks, and small
+adventure vehicles. It is not a flight controller and it does not require
+Betaflight, INAV, or any external FC.
 
-</center>
+> Current field baseline: **Stable 02 / MVP 0.5D**
+>
+> Target tested: **BETAFPV PWM 2.4GHz RX**
+>
+> ExpressLRS base: **4.0.1**
+>
+> RZGX firmware label: **4.0.1.5D**
 
-**ExpressLRS** is developed and maintained by **ExpressLRS LLC** and its passionate open source community, working together to advance reliable, high-performance radio control technology.
+## What It Does
 
-## Support ExpressLRS
-You can support ExpressLRS by contributing code, testing new features, sharing your ideas, or helping others get started. We are exceptionally grateful for those who donate their time to our passion.
+The receiver continues to provide PWM outputs for vehicle control, while the
+same receiver also renders a small OSD through MSP DisplayPort.
 
-If you don't have time to lend a hand in that way but still want to have an impact, consider donating. Donations are used for infrastructure costs and to buy test equipment needed to further the project and make it securely accessible. ExpressLRS accepts donations through Open Collective, which provides recognition of donors and transparency on how that support is utilized.
+Current MVP OSD:
 
-[![Open Collective backers](https://img.shields.io/opencollective/backers/expresslrs?label=Open%20Collective%20backers&style=flat-square)](https://opencollective.com/expresslrs)
+- Craft Name
+- STANDBY state
+- ENGINE START arming transition
+- Steering percentage
+- Gas percentage
+- RSSI value
+- Link Quality value
 
-We appreciate all forms of contribution and hope you will join us on Discord!
+The OSD is intentionally simple so the receiver radio link stays stable.
 
-## Website
-For general information on the project please refer to our guides on the [website](https://www.expresslrs.org/), and our [FAQ](https://www.expresslrs.org/faq/)
+## Tested Hardware
 
-## About
+Stable 02 / MVP 0.5D has been field-tested on:
 
-ExpressLRS is an open source Radio Link for Radio Control applications. Designed to be the best FPV Racing link, it is based on the fantastic Semtech **SX127x**/**SX1280** LoRa hardware combined with an Espressif or STM32 Processor. Using LoRa modulation as well as reduced packet size it achieves best in class range and latency. It achieves this using a highly optimized over-the-air packet structure, giving simultaneous range and latency advantages. It supports both 900 MHz and 2.4 GHz links, each with their own benefits. 900 MHz supports a maximum of 200 Hz packet rate, with higher penetration. 2.4 GHz supports a blistering fast 1000 Hz on [EdgeTX](http://edgetx.org/). With hundreds of different hardware targets from a wide range of hardware manufacturers, the choice of hardware is constantly growing, with different hardware suited to different requirements.
+- BETAFPV PWM 2.4GHz RX
+- RadioMaster Boxer internal ELRS TX
+- ExpressLRS 4.0.1 firmware base
+- DJI O3 Air Unit
+- DJI Goggles
+- RC ground vehicles including crawler/adventure and faster trail use cases
 
-## Configurator
-To configure your ExpressLRS hardware, the ExpressLRS Configurator can be used, which is found here:
+The same firmware was tested on two receivers of the same target type. Both
+receivers were able to use their own Craft Name and Binding Phrase through the
+receiver WiFi Configurator.
 
-https://github.com/ExpressLRS/ExpressLRS-Configurator/releases/
+## Required Receiver Output Mapping
 
-## Community
-We have both a [Discord Server](https://discord.gg/expresslrs) and [Facebook Group](https://www.facebook.com/groups/636441730280366), which have great support for new users and constant ongoing development discussion
+For the tested BETAFPV PWM receiver target:
 
-## Features
+| Output | Function |
+| --- | --- |
+| Output 1 | CH1 / Steering PWM |
+| Output 2 | Serial TX to DJI Air Unit RX |
+| Output 3 | Serial RX from DJI Air Unit TX |
+| Output 4 | CH2 / Gas PWM |
+| Output 5 | CH3 PWM |
 
-ExpressLRS has the following features:
+In the receiver WiFi Configurator, configure:
 
-- Up to 1000 Hz Packet Rate
-- Telemetry (Betaflight Lua Compatibility)
-- Wifi Updates
-- Bluetooth or WiFi Sim Joystick
-- Oled & TFT Displays
-- 2.4 GHz, 900 MHz, and Dual-Band RC Link
-- SMD Antenna - allows for easier installation into micros
-- Supported receiver protocols: CRSF, SBUS, SUMD, HoTT Telemetry, MAVLink, and PWM
-- VTX and VRX Frequency adjustments from the Lua, including SmartAudio and Tramp support
-- Bind Phrases - no need for button binding
+- Output 2 as `TX`
+- Output 3 as `RX`
+- Serial protocol as DisplayPort/MSP DisplayPort
+- Rover OSD enabled
 
-with many more features on the way!
+The exact labels can depend on the ExpressLRS configurator page, but the tested
+setup uses Output 2/3 for the UART pair.
 
-## Supported Hardware
+## DJI Air Unit Wiring
 
-ExpressLRS currently supports hardware from a wide range of manufacturers. In principle, the targets listed in the [ExpressLRS Configurator](https://github.com/ExpressLRS/ExpressLRS-Configurator/releases/) are tested and supported hardware.
+The tested rover setup powers the ELRS PWM receiver and the DJI Air Unit from
+separate power sources. Because of that, a shared ground is required for the
+UART signal to work correctly.
 
-See [Hardware Selection](https://www.expresslrs.org/hardware/hardware-selection/) for guidance. We do not manufacture any of our hardware, so we can only provide limited support for faulty hardware.
+Tested power layout:
 
-## Developers
+- ELRS PWM receiver: powered by the vehicle receiver/ESC 5V rail.
+- DJI O3/O4 Air Unit: powered from a separate external LiPo/BEC supply.
+- Grounds: receiver ground and Air Unit power ground are connected together.
 
-If you are a developer and would like to contribute to the project, feel free to join the [discord](https://discord.gg/expresslrs) and chat about bugs and issues. You can also look for issues at the [GitHub Issue Tracker](https://github.com/ExpressLRS/ExpressLRS/issues). The best thing to do is to submit a Pull Request to the GitHub Repository.
+Receiver side:
 
-![](https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/community.png?raw=true)
+| Receiver Pin | Connects To |
+| --- | --- |
+| Output 2 `S` / TX | DJI Air Unit RX |
+| Output 2 `V` | Not connected |
+| Output 2 `G` | DJI Air Unit GND |
+| Output 3 `S` / RX | DJI Air Unit TX |
+| Output 3 `V` | Not connected |
+| Output 3 `G` | Optional / not required when Output 2 GND is connected |
+
+DJI Air Unit side:
+
+| DJI Air Unit Pin | Connects To |
+| --- | --- |
+| VCC | External Air Unit power positive |
+| GND | External Air Unit power negative and receiver ground |
+| RX | Receiver Output 2 `S` / TX |
+| TX | Receiver Output 3 `S` / RX |
+| SBUS | Not used |
+| SBUS GND | Not used |
+
+Important:
+
+- TX and RX must cross: receiver TX goes to Air Unit RX, and Air Unit TX goes
+  to receiver RX.
+- Do not connect the receiver output `V` pin to the DJI Air Unit power pin.
+- If the Air Unit uses a separate battery or BEC, common ground is mandatory.
+
+## Flashing
+
+The tested update path is the normal ExpressLRS receiver WiFi update page.
+
+1. Put the receiver into WiFi mode.
+2. Open the receiver WiFi Configurator.
+3. Go to **Update**.
+4. Upload the correct `firmware.bin.gz` for the same target.
+5. Reboot the receiver.
+6. Set the required output mapping and Rover OSD options.
+
+Use only the binary that matches the exact receiver target. A wrong target can
+make the receiver fail to boot or require recovery through USB-to-UART.
+
+## Configuration Notes
+
+Binding should be configured through the standard ExpressLRS receiver WiFi
+Configurator.
+
+Recommended field workflow:
+
+- Flash the RZGX firmware binary.
+- Set the user's Binding Phrase or Binding UID in the WiFi Configurator.
+- Set Craft Name in the Rover OSD page.
+- Confirm Output 2/3 are mapped as Serial TX/RX.
+- Confirm Output 4/5 are still mapped to the desired PWM channels.
+
+Do not patch the firmware binary directly unless you fully understand the
+ExpressLRS firmware options block. Incorrect binary patching can break binding,
+runtime options, or receiver boot behavior.
+
+## Stable Baseline
+
+See:
+
+- [STABLE-BASELINE.md](STABLE-BASELINE.md)
+- [docs/releases/STABLE-02-MVP-0.5D.md](docs/releases/STABLE-02-MVP-0.5D.md)
+
+Stable 02 / MVP 0.5D was selected after repeated indoor and outdoor tests where:
+
+- OSD displayed consistently.
+- Link quality stayed stable.
+- No repeated telemetry lost / telemetry recovered loop was observed.
+- CH2 continuous use stayed stable.
+- The same target receiver type also worked on another vehicle.
+
+## Relationship to ExpressLRS Upstream
+
+This is an opinionated RZGX rover-focused fork.
+
+ExpressLRS upstream is the base radio firmware. The RZGX changes are a niche
+ground-vehicle layer on top of it: receiver-side DJI MSP DisplayPort OSD, rover
+OSD layout, and tested PWM receiver mapping.
+
+This project is not intended to replace a generic upstream DisplayPort feature.
+If ExpressLRS upstream accepts or evolves generic receiver-side MSP DisplayPort
+support, RZGX Rover-ELRS Controller can later be rebased or adapted on top of
+that upstream work.
+
+## Acknowledgements
+
+Created and maintained by **Rizangg / RZGX**.
+
+This fork is based on [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS).
+All upstream ExpressLRS contributors deserve credit for the radio link,
+receiver, PWM, WiFi configuration, and build system foundation.
+
+Special thanks to **Renaldy FPV / aldyduino** for early MSP DisplayPort
+reference work, technical discussion, and his related ExpressLRS receiver-side
+DisplayPort work.
+
+Related references:
+
+- [ExpressLRS](https://github.com/ExpressLRS/ExpressLRS)
+- [aldyduino/ESP32MSPDisplayPort](https://github.com/aldyduino/ESP32MSPDisplayPort)
+- [ExpressLRS PR #3703](https://github.com/ExpressLRS/ExpressLRS/pull/3703)
+
+This project was developed with AI-assisted coding support from OpenAI Codex /
+ChatGPT. Hardware testing, project direction, and final field validation remain
+with the maintainer.
+
+## License
+
+This project is a fork of ExpressLRS and follows the upstream license terms.
+Keep the upstream license and copyright notices when redistributing source or
+binary builds.
+
+See [LICENSE](LICENSE).

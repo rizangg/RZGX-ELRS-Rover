@@ -40,6 +40,7 @@
 #include "WebContent.h"
 
 #include "config.h"
+#include "rzgx_version.h"
 
 #if defined(RADIO_LR1121)
 #include "lr1121.h"
@@ -361,6 +362,8 @@ static void GetConfiguration(AsyncWebServerRequest *request)
     cfg["modelid"] = config.GetModelId();
     cfg["force-tlm"] = config.GetForceTlmOff();
     cfg["vbind"] = config.GetBindStorage();
+    cfg["rover-osd-enabled"] = config.GetRoverOsdEnabled();
+    cfg["rover-craft-name"] = config.GetRoverCraftName();
     for (int ch=0; ch<GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
     {
       const auto channel = cfg["pwm"][ch].to<JsonObject>();
@@ -395,6 +398,7 @@ static void GetConfiguration(AsyncWebServerRequest *request)
     settings["custom_hardware"] = hardware_flag(HARDWARE_customised);
     settings["target"] = &target_name[4];
     settings["version"] = VERSION;
+    settings["rover-version"] = RZGX_ROVER_FIRMWARE_VERSION;
     settings["git-commit"] = commit;
 #if defined(TARGET_TX)
     settings["module-type"] = "TX";
@@ -558,6 +562,9 @@ static void UpdateConfiguration(AsyncWebServerRequest *request, JsonVariant &jso
   config.SetForceTlmOff(forceTlm != 0);
 
   config.SetBindStorage((rx_config_bindstorage_t)(json["vbind"] | 0));
+  config.SetRoverOsdEnabled(json["rover-osd-enabled"] | true);
+  const char *roverCraftName = json["rover-craft-name"] | config.GetRoverCraftName();
+  config.SetRoverCraftName(roverCraftName);
   JsonUidToConfig(json);
 
   JsonArray pwm = json["pwm"].as<JsonArray>();

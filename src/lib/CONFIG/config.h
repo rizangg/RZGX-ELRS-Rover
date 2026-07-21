@@ -16,7 +16,7 @@
 #define RX_CONFIG_MAGIC     (0b10U << 30)
 
 #define TX_CONFIG_VERSION   8U
-#define RX_CONFIG_VERSION   11U
+#define RX_CONFIG_VERSION   12U
 
 #if defined(TARGET_TX)
 
@@ -254,6 +254,8 @@ typedef struct __attribute__((packed)) {
                 teamracePitMode:1;  // FUTURE: Enable pit mode when disabling model
     uint8_t     targetSysId;
     uint8_t     sourceSysId;
+    uint8_t     roverOsdEnabled;
+    char        roverCraftName[17];
 } rx_config_t;
 
 class RxConfig
@@ -288,6 +290,8 @@ public:
     eFailsafeMode GetFailsafeMode() const { return (eFailsafeMode)m_config.failsafeMode; }
     uint8_t GetTargetSysId()  const { return m_config.targetSysId; }
     uint8_t GetSourceSysId()  const { return m_config.sourceSysId; }
+    bool GetRoverOsdEnabled() const { return m_config.roverOsdEnabled != 0; }
+    const char *GetRoverCraftName() const { return m_config.roverCraftName; }
     rx_config_bindstorage_t GetBindStorage() const { return (rx_config_bindstorage_t)m_config.bindStorage; }
     bool IsOnLoan() const;
 
@@ -312,6 +316,8 @@ public:
     void SetFailsafeMode(eFailsafeMode failsafeMode);
     void SetTargetSysId(uint8_t sysID);
     void SetSourceSysId(uint8_t sysID);
+    void SetRoverOsdEnabled(bool enabled);
+    void SetRoverCraftName(const char *name);
     void SetBindStorage(rx_config_bindstorage_t value);
     void ReturnLoan();
 
@@ -323,6 +329,7 @@ private:
     void UpgradeEepromV6();
     void UpgradeEepromV7V8(uint8_t ver);
     void UpgradeEepromV9V10(uint8_t ver);
+    void UpgradeEepromV11();
 
     rx_config_t m_config;
     ELRS_EEPROM *m_eeprom;

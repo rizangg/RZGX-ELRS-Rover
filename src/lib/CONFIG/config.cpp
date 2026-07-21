@@ -848,6 +848,8 @@ void RxConfig::Load()
         case 9: // fallthrough
         case 10:
             UpgradeEepromV9V10(version); break;
+        case 11:
+            UpgradeEepromV11(); break;
     }
     m_modified = EVENT_CONFIG_MODEL_CHANGED; // anything to force write
     Commit();
@@ -1047,6 +1049,34 @@ void RxConfig::UpgradeEepromV9V10(uint8_t ver)
     }
     for (unsigned ch=0; ch<16; ++ch)
         PwmConfigV9(&old.pwmChannels[ch], &m_config.pwmChannels[ch]);
+}
+
+void RxConfig::UpgradeEepromV11()
+{
+    v11_rx_config_t old;
+    m_eeprom->Get(0, old);
+
+    memcpy(m_config.uid, old.uid, UID_LEN);
+    CONFCOPY(serial1Protocol);
+    CONFCOPY(flash_discriminator);
+    CONFCOPY(vbat.scale);
+    CONFCOPY(vbat.offset);
+    CONFCOPY(bindStorage);
+    CONFCOPY(power);
+    CONFCOPY(antennaMode);
+    CONFCOPY(powerOnCounter);
+    CONFCOPY(forceTlmOff);
+    CONFCOPY(rateInitialIdx);
+    CONFCOPY(modelId);
+    CONFCOPY(serialProtocol);
+    CONFCOPY(failsafeMode);
+    CONFCOPY(teamraceChannel);
+    CONFCOPY(teamracePosition);
+    CONFCOPY(teamracePitMode);
+    CONFCOPY(targetSysId);
+    CONFCOPY(sourceSysId);
+    for (unsigned ch = 0; ch < 16; ++ch)
+        m_config.pwmChannels[ch].raw = old.pwmChannels[ch].raw;
 }
 
 /**
@@ -1260,6 +1290,9 @@ RxConfig::SetDefaults(bool commit)
     }
 
     m_config.teamraceChannel = AUX7; // CH11
+    m_config.roverOsdEnabled = 1;
+    strncpy(m_config.roverCraftName, "RZGX ROVER", sizeof(m_config.roverCraftName));
+    m_config.roverCraftName[sizeof(m_config.roverCraftName) - 1] = '\0';
 
     if (commit)
     {
@@ -1404,6 +1437,40 @@ void RxConfig::SetSourceSysId(uint8_t value)
     if (m_config.sourceSysId != value)
     {
         m_config.sourceSysId = value;
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+}
+
+void RxConfig::SetRoverOsdEnabled(bool enabled)
+{
+    const uint8_t value = enabled ? 1 : 0;
+    if (m_config.roverOsdEnabled != value)
+    {
+        m_config.roverOsdEnabled = value;
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+}
+
+void RxConfig::SetRoverCraftName(const char *name)
+{
+    char sanitized[sizeof(m_config.roverCraftName)] = {};
+    size_t out = 0;
+    if (name != nullptr)
+    {
+        while (*name != '\0' && out < sizeof(sanitized) - 1)
+        {
+            char c = *name++;
+            if (c >= 'a' && c <= 'z') c -= ('a' - 'A');
+            if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == ' ' || c == '_' || c == '-')
+                sanitized[out++] = c;
+        }
+    }
+    if (out == 0)
+        strncpy(sanitized, "RZGX ROVER", sizeof(sanitized));
+
+    if (strncmp(m_config.roverCraftName, sanitized, sizeof(m_config.roverCraftName)) != 0)
+    {
+        memcpy(m_config.roverCraftName, sanitized, sizeof(m_config.roverCraftName));
         m_modified = EVENT_CONFIG_MODEL_CHANGED;
     }
 }

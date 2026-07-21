@@ -15,25 +15,151 @@ CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
 #if defined(TARGET_RX)
 
 #include "SerialDisplayport.h"
+#include "CRSFRouter.h"
 #include "OTA.h"
+#include "config.h"
 #include "options.h"
 
-void SerialDisplayport::send(uint8_t messageID, void * payload, uint8_t size, Stream * _stream)
+static constexpr uint8_t MSP_DP_HEARTBEAT = 0;
+static constexpr uint8_t MSP_DP_CLEAR_SCREEN = 2;
+static constexpr uint8_t MSP_DP_WRITE_STRING = 3;
+static constexpr uint8_t MSP_DP_DRAW_SCREEN = 4;
+
+static constexpr uint8_t OSD_COLUMNS = 53;
+static constexpr uint32_t OSD_UPDATE_INTERVAL_MS = 100;
+static constexpr uint8_t OSD_CENTER_ROW = 10;
+static constexpr uint32_t ENGINE_START_BLINK_INTERVAL_MS = 250;
+static constexpr uint32_t ENGINE_START_BLINK_DURATION_MS = 1500;
+static constexpr char OSD_ARROW_DOWN = 0x60;
+static constexpr char OSD_ARROW_RIGHT = 0x64;
+static constexpr char OSD_ARROW_UP = 0x68;
+static constexpr char OSD_ARROW_LEFT = 0x6C;
+static constexpr char OSD_RSSI = 0x01;
+static constexpr char OSD_LINK_QUALITY = 0x7B;
+
+static uint8_t centerColumn(const char *text)
 {
-    _stream->write('$');
-    _stream->write('M');
-    _stream->write('>');
-    _stream->write(size);
-    _stream->write(messageID);
+    const size_t length = strlen(text);
+    return length >= OSD_COLUMNS ? 0 : (OSD_COLUMNS - length) / 2;
+}
+
+static uint8_t rightColumn(const char *text)
+{
+    const size_t length = strlen(text);
+    return length >= OSD_COLUMNS ? 0 : OSD_COLUMNS - length;
+}
+
+static int8_t channelPercent(uint32_t value)
+{
+    if (value == CRSF_CHANNEL_VALUE_UNSET)
+        return 0;
+
+    int32_t percent;
+    if (value >= CRSF_CHANNEL_VALUE_MID)
+    {
+        percent = (static_cast<int32_t>(value) - CRSF_CHANNEL_VALUE_MID) * 100 /
+                  (CRSF_CHANNEL_VALUE_2000 - CRSF_CHANNEL_VALUE_MID);
+    }
+    else
+    {
+        percent = -((CRSF_CHANNEL_VALUE_MID - static_cast<int32_t>(value)) * 100 /
+                    (CRSF_CHANNEL_VALUE_MID - CRSF_CHANNEL_VALUE_1000));
+    }
+
+    percent = constrain(percent, -100, 100);
+    return (percent >= -1 && percent <= 1) ? 0 : static_cast<int8_t>(percent);
+}
+
+void SerialDisplayport::send(uint8_t messageID, const void *payload, uint8_t size)
+{
+    _outputPort->write('$');
+    _outputPort->write('M');
+    _outputPort->write('>');
+    _outputPort->write(size);
+    _outputPort->write(messageID);
     uint8_t checksum = size ^ messageID;
-    uint8_t * payloadPtr = (uint8_t*)payload;
+    const uint8_t *payloadPtr = static_cast<const uint8_t *>(payload);
     for (uint8_t i = 0; i < size; ++i)
     {
-      uint8_t b = *(payloadPtr++);
-      checksum ^= b;
+        checksum ^= payloadPtr[i];
     }
-    _stream->write((uint8_t*)payload, size);
-    _stream->write(checksum);
+    _outputPort->write(payloadPtr, size);
+    _outputPort->write(checksum);
+}
+
+void SerialDisplayport::sendDisplayPort(uint8_t command)
+{
+    send(MSP_DISPLAYPORT, &command, 1);
+}
+
+void SerialDisplayport::sendDisplayPortString(uint8_t row, uint8_t col, const char *text)
+{
+    uint8_t payload[34];
+    uint8_t size = 0;
+    payload[size++] = MSP_DP_WRITE_STRING;
+    payload[size++] = row;
+    payload[size++] = col;
+    payload[size++] = 0;
+    while (*text != '\0' && size < sizeof(payload))
+        payload[size++] = static_cast<uint8_t>(*text++);
+    send(MSP_DISPLAYPORT, payload, size);
+}
+
+void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
+{
+    const uint32_t now = millis();
+    const char *craftName = config.GetRoverCraftName();
+    const int8_t steeringPercent = channelPercent(channelData[0]);
+    const int8_t gasPercent = channelPercent(channelData[1]);
+    const char steeringDirection = steeringPercent == 0 ? '-' :
+        (steeringPercent < 0 ? OSD_ARROW_LEFT : OSD_ARROW_RIGHT);
+    const char gasDirection = gasPercent == 0 ? '-' :
+        (gasPercent < 0 ? OSD_ARROW_DOWN : OSD_ARROW_UP);
+
+    if (armed && !m_lastArmedState)
+        m_engineStartBlinkStartedAt = now;
+    else if (!armed)
+        m_engineStartBlinkStartedAt = 0;
+    m_lastArmedState = armed;
+
+    const char *stateText = nullptr;
+    if (!armed)
+    {
+        stateText = "STANDBY";
+    }
+    else if (m_engineStartBlinkStartedAt != 0)
+    {
+        const uint32_t blinkElapsed = now - m_engineStartBlinkStartedAt;
+        if (blinkElapsed < ENGINE_START_BLINK_DURATION_MS &&
+            (blinkElapsed / ENGINE_START_BLINK_INTERVAL_MS) % 2 == 0)
+        {
+            stateText = "ENGINE START";
+        }
+    }
+
+    char steeringText[16];
+    char gasText[16];
+    char rssiText[10];
+    char lqText[12];
+    const uint8_t rssiMagnitude = linkStats.active_antenna != 0 && linkStats.uplink_RSSI_2 != 0
+        ? linkStats.uplink_RSSI_2
+        : linkStats.uplink_RSSI_1;
+    snprintf(steeringText, sizeof(steeringText), "STR %c %d%%", steeringDirection, abs(static_cast<int>(steeringPercent)));
+    snprintf(gasText, sizeof(gasText), "GAS %c %d%%", gasDirection, abs(static_cast<int>(gasPercent)));
+    snprintf(rssiText, sizeof(rssiText), "%c -%u", OSD_RSSI, static_cast<unsigned>(rssiMagnitude));
+    snprintf(lqText, sizeof(lqText), "%c %u%%", OSD_LINK_QUALITY,
+             static_cast<unsigned>(constrain(linkStats.uplink_Link_quality, 0, 100)));
+
+    sendDisplayPort(MSP_DP_HEARTBEAT);
+    sendDisplayPort(MSP_DP_CLEAR_SCREEN);
+    sendDisplayPortString(0, centerColumn(craftName), craftName);
+    if (stateText != nullptr)
+        sendDisplayPortString(OSD_CENTER_ROW, centerColumn(stateText), stateText);
+    sendDisplayPortString(15, 1, steeringText);
+    sendDisplayPortString(16, 1, gasText);
+    sendDisplayPortString(15, rightColumn(rssiText), rssiText);
+    sendDisplayPortString(16, rightColumn(lqText), lqText);
+    sendDisplayPort(MSP_DP_DRAW_SCREEN);
 }
 
 uint32_t SerialDisplayport::sendRCFrame(bool frameAvailable, bool frameMissed, uint32_t *channelData)
@@ -54,10 +180,16 @@ uint32_t SerialDisplayport::sendRCFrame(bool frameAvailable, bool frameMissed, u
     status.extra_flags = 0;
 
     // Send status MSP
-    send(MSP_STATUS, &status, sizeof(status), _outputPort);
+    send(MSP_STATUS, &status, sizeof(status));
 
     // Send extended status MSP
-    send(MSP_STATUS_EX, &status, sizeof(status), _outputPort);
+    send(MSP_STATUS_EX, &status, sizeof(status));
+
+    if (config.GetRoverOsdEnabled() && m_receivedBytes >= 6 && millis() - m_lastOsdTransaction >= OSD_UPDATE_INTERVAL_MS)
+    {
+        renderRoverOsd(armed, channelData);
+        m_lastOsdTransaction = millis();
+    }
 
     return MSP_MSG_PERIOD_MS;   // Send MSP msgs to DJI at 10Hz
 }

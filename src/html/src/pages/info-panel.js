@@ -19,6 +19,9 @@ class InfoPanel extends LitElement {
                     <tr><td><b>Product</b></td><td>${elrsState.settings.product_name}</td></tr>
                     <tr><td><b>Lua Name</b></td><td>${elrsState.settings.lua_name}</td></tr>
                     <tr><td><b>Version</b></td><td>${elrsState.settings.version}</td></tr>
+                    ${elrsState.settings['rover-version'] ?
+                            html`<tr><td><b>RZGX Build</b></td><td>${elrsState.settings['rover-version']}</td></tr>`
+                            : ''}
                     <tr><td><b>Git Hash</b></td><td>${elrsState.settings['git-commit']}</td></tr>
                     <tr><td><b>Device Type</b></td><td>${elrsState.settings['module-type']}</td></tr>
                     <tr><td><b>Firmware</b></td><td>${elrsState.settings.target}</td></tr>

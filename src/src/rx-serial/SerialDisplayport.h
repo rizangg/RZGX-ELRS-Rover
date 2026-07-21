@@ -20,6 +20,7 @@ CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
 
 #define MSP_STATUS          101
 #define MSP_STATUS_EX       150
+#define MSP_DISPLAYPORT     182
 #define MSP_MSG_PERIOD_MS   100
 
 struct msp_status_t
@@ -42,19 +43,25 @@ struct msp_status_t
 class SerialDisplayport final : public SerialIO
 {
 public:
-    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0) {}
+    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0), m_lastOsdTransaction(0), m_engineStartBlinkStartedAt(0), m_lastArmedState(false) {}
     ~SerialDisplayport() override = default;
 
-    void sendQueuedData(uint32_t maxBytesToSend) override {};
+    void sendQueuedData(uint32_t) override {}
     uint32_t sendRCFrame(bool frameAvailable, bool frameMissed, uint32_t *channelData) override;
 
 private:
     void processBytes(uint8_t *bytes, uint16_t size) override;
-    void send(uint8_t messageID, void * payload, uint8_t size, Stream * _stream);
+    void send(uint8_t messageID, const void *payload, uint8_t size);
+    void sendDisplayPort(uint8_t command);
+    void sendDisplayPortString(uint8_t row, uint8_t col, const char *text);
+    void renderRoverOsd(bool armed, const uint32_t *channelData);
     bool getArmedState();
 
     uint8_t m_receivedBytes;
     uint32_t m_receivedTimestamp;
+    uint32_t m_lastOsdTransaction;
+    uint32_t m_engineStartBlinkStartedAt;
+    bool m_lastArmedState;
 };
 
 #endif // defined(TARGET_RX)

@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import babel from 'vite-plugin-babel'
 import { promises as fs } from 'fs'
 import path from 'path'
-import Zopfli from 'node-zopfli-es'
+import { gzipSync } from 'node:zlib'
 import { minifyTemplateLiterals } from 'rollup-plugin-minify-template-literals';
 
 function toCIdentifier(p) {
@@ -119,7 +119,7 @@ function viteEsp32HeaderPlugin(options = {}) {
         const webPath = '/' + rel // leading slash for HTTP paths
         const id = toCIdentifier(rel)
         const data = await fs.readFile(abs)
-        const compressed = Zopfli.gzipSync(data, { numiterations: 15 })
+        const compressed = gzipSync(data, { level: 9 })
         const hex = toHexArray(compressed)
         const contentType = guessContentType(rel)
         header += `\n// ${webPath} (original ${data.length} bytes) -> compressed ${compressed.length} bytes\n`;
