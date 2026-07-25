@@ -39,7 +39,9 @@ The OSD is intentionally simple so the receiver radio link stays stable.
 Stable 02 / MVP 0.5D has been field-tested on:
 
 - BETAFPV PWM 2.4GHz RX
-- RadioMaster Boxer internal ELRS TX
+- RadioMaster Boxer with internal 2.4GHz ELRS transmitter
+- 150Hz packet rate
+- 1000mW maximum TX power with Dynamic Power enabled
 - ExpressLRS 4.0.1 firmware base
 - DJI O3 Air Unit
 - DJI Goggles

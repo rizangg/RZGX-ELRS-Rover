@@ -11,6 +11,13 @@ Summary:
 - Second same-type receiver: stable after Craft Name and Binding Phrase were
   changed through WiFi Configurator.
 
+Radio configuration used for these field tests:
+
+- RadioMaster Boxer with internal 2.4GHz ELRS transmitter
+- Packet rate: `150Hz`
+- Maximum TX power: `1000mW`
+- Dynamic Power: enabled
+
 Observed RSSI:
 
 - Indoor close range: around `-30` to `-40`
