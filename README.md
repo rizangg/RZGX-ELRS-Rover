@@ -58,6 +58,16 @@ Stable 02 / MVP 0.5D has been field-tested on:
 - DJI Goggles
 - RC ground vehicles including crawler/adventure and faster trail use cases
 
+Official receiver reference:
+[BETAFPV ELRS Micro Receiver](https://betafpv.com/products/elrs-micro-receiver?srsltid=AfmBOoqxqus0FifaQNa2q9xz39nFhr7szr0IaBza_Av6eb_ZkjkS9i34)
+
+Actual receiver used in this project:
+
+![Actual BETAFPV PWM 2.4GHz RX used for RZGX ELRS Rover](docs/assets/betafpv-pwm-2g4-rx-actual.jpg)
+
+The image above is a project photo of the tested receiver, not a rehosted
+official product render.
+
 The same firmware was tested on two receivers of the same target type. Both
 receivers were able to use their own Craft Name and Binding Phrase through the
 receiver WiFi Configurator.
