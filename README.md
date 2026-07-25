@@ -49,6 +49,21 @@ The same firmware was tested on two receivers of the same target type. Both
 receivers were able to use their own Craft Name and Binding Phrase through the
 receiver WiFi Configurator.
 
+## Field Test Gallery
+
+These field captures show the rover OSD during daytime range testing, extended
+full-throttle use, a night run, and the ENGINE START transition.
+
+| Night adventure | Approximately 80-meter range test |
+| --- | --- |
+| ![RZGX ELRS Rover during a night adventure](docs/images/field-tests/night-adventure.png) | ![RZGX ELRS Rover at approximately 80 meters](docs/images/field-tests/80-meter-distance.png) |
+| Extended full-throttle use | ENGINE START OSD |
+| ![RZGX ELRS Rover during extended full-throttle use](docs/images/field-tests/extended-full-throttle.png) | ![RZGX ELRS Rover ENGINE START OSD](docs/images/field-tests/engine-start-osd.png) |
+
+The values shown are field observations captured through the DJI OSD, not
+calibrated laboratory measurements. See [docs/TEST_LOG.md](docs/TEST_LOG.md)
+for the recorded observations.
+
 ## Required Receiver Output Mapping
 
 For the tested BETAFPV PWM receiver target:

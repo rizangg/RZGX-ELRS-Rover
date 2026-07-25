@@ -5,7 +5,7 @@
 Summary:
 
 - Indoor test: stable OSD and link.
-- Outdoor test: stable OSD and link up to around 60 meters.
+- Outdoor test: stable OSD and link up to around 80 meters.
 - Repeated morning-to-midday test runs: stable.
 - Continuous CH2 use: stable.
 - Second same-type receiver: stable after Craft Name and Binding Phrase were
@@ -15,8 +15,21 @@ Observed RSSI:
 
 - Indoor close range: around `-30` to `-40`
 - Outdoor around 60 meters: around `-60` to `-70`
+- Outdoor around 80 meters: `-80` with `100%` Link Quality in the captured
+  frame.
 
 These values are field observations, not calibrated lab measurements.
+
+## Field Evidence
+
+- [Night adventure](images/field-tests/night-adventure.png): night driving
+  capture with the rover OSD active.
+- [Approximately 80-meter range test](images/field-tests/80-meter-distance.png):
+  daytime range capture showing `-80` RSSI and `100%` Link Quality.
+- [Extended full-throttle use](images/field-tests/extended-full-throttle.png):
+  capture showing `100%` gas and `100%` Link Quality.
+- [ENGINE START OSD](images/field-tests/engine-start-osd.png): capture of the
+  arming/start transition rendered by the receiver-side OSD.
 
 ## Earlier Development Notes
 
