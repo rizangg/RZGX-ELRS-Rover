@@ -17,6 +17,17 @@ Betaflight, INAV, or any external FC.
 >
 > RZGX firmware label: **4.0.1.5D**
 
+## Stable Firmware Download
+
+Current public baseline: **Stable 02 / MVP 0.5D**.
+
+- Target: **BETAFPV PWM 2.4GHz RX**
+- Binary: [`RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz)
+- Release notes: [`Stable 02 / MVP 0.5D`](docs/releases/STABLE-02-MVP-0.5D.md)
+
+Flash only to the exact receiver target above. Other ExpressLRS receivers are
+not validated by this baseline.
+
 ## What It Does
 
 The receiver continues to provide PWM outputs for vehicle control, while the
@@ -142,6 +153,22 @@ The tested update path is the normal ExpressLRS receiver WiFi update page.
 
 Use only the binary that matches the exact receiver target. A wrong target can
 make the receiver fail to boot or require recovery through USB-to-UART.
+
+### USB-to-UART Recovery Note
+
+If WiFi flashing or WiFi mode is unavailable, recovery may be possible with a
+3.3V USB-to-UART adapter such as a CP2102.
+
+Field-tested recovery wiring:
+
+- CP2102 TX -> receiver RX
+- CP2102 RX -> receiver TX
+- CP2102 GND -> receiver GND
+- Hold the receiver BOOT button before starting the flash and keep holding it
+  until flashing finishes.
+
+In the tested recovery case, USB power was enough and no separate 5V supply was
+needed. Use the exact **BETAFPV PWM 2.4GHz RX** target when recovering.
 
 ## Configuration Notes
 

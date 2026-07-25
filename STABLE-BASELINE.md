@@ -11,3 +11,7 @@ The current stable baseline is **Stable 02 / MVP 0.5D**.
 
 This is a field-validated development baseline for the RZGX rover use case, not
 an upstream ExpressLRS production release.
+
+Validation note: this baseline has been field-tested on two receivers of the
+same target type. It should be treated as stable for the tested hardware, not as
+a generic all-receiver ExpressLRS release.

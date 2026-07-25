@@ -22,6 +22,29 @@ Only flash firmware built for the exact target:
 Flashing the wrong target can make the receiver fail to boot and may require
 USB-to-UART recovery.
 
+## USB-to-UART Recovery
+
+If WiFi mode is unavailable after a bad flash, use a 3.3V USB-to-UART adapter
+such as a CP2102 and the exact `BETAFPV PWM 2.4GHz RX` target.
+
+Field-tested wiring:
+
+| CP2102 Pin | Receiver Pin |
+| --- | --- |
+| TX | RX |
+| RX | TX |
+| GND | GND |
+
+Field-tested bootloader sequence:
+
+1. Connect the USB-to-UART adapter.
+2. Hold the receiver BOOT button.
+3. Start flashing.
+4. Keep holding BOOT until flashing finishes.
+
+In the tested recovery case, USB power was enough and a separate external 5V
+supply was not required.
+
 ## Binding
 
 Use the normal ExpressLRS Binding page.
