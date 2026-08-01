@@ -47,6 +47,8 @@ Field evidence:
 - [Approximately 5 m](assets/er5c-5h/field-test-5m.png): timer `00:38`, custom
   battery `3.71 V` per cell, native battery `7.4 V` whole pack, RSSI `-71`, and
   LQ `100%` in the captured frame.
+- [Firmware Information page with Binding UID redacted](assets/er5c-5h/webui-firmware-information-redacted.jpg):
+  confirms the RadioMaster ER5A/C V2 target and embedded RZGX build `4.0.1.5H`.
 - [PWM and serial routing](assets/er5c-5h/webui-pwm-serial-routing.jpg)
 - [Rover OSD menu](assets/er5c-5h/webui-rover-osd-menu.jpg)
 - [Rover OSD settings and two-cell configuration](assets/er5c-5h/webui-rover-osd-settings.jpg)
