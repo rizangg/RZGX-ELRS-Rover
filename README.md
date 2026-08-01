@@ -177,6 +177,15 @@ Important:
 - Do not connect the receiver output `V` pin to the DJI Air Unit power pin.
 - If the Air Unit uses a separate battery or BEC, common ground is mandatory.
 
+### ER5C V2 Battery-Sense Lead
+
+The tested ER5C V2 installation uses its single voltage-telemetry sense lead to
+select between the RC drive battery, a separate DJI Air Unit battery, and the
+receiver's ESC-BEC supply. Because all grounds in the tested vehicle are already
+common, only the positive sense lead needs to be moved. See the complete
+[ER5C V2 VBAT wiring and safety note](docs/ER5C_VBAT_WIRING.md) before making
+this connection.
+
 ## Flashing
 
 The tested update path is the normal ExpressLRS receiver WiFi update page.

@@ -54,6 +54,11 @@ does not provide those measurements.
 | Output 4 | CH2 / gas PWM |
 | Output 5 | CH3 PWM |
 
+The field-tested ER5C V2 voltage source can be selected with its single
+positive telemetry sense lead. Refer to the
+[ER5C V2 VBAT wiring and safety note](../ER5C_VBAT_WIRING.md) for the tested
+RC-battery, external-Air-Unit-battery, and ESC-BEC arrangements.
+
 ## Artifacts
 
 - `RZGX-Rover-ELRS-MVP-0.5H-RADIOMASTER-ER5A-ER5C-V2.bin`
