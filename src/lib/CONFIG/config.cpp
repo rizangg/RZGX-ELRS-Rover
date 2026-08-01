@@ -850,6 +850,8 @@ void RxConfig::Load()
             UpgradeEepromV9V10(version); break;
         case 11:
             UpgradeEepromV11(); break;
+        case 12:
+            UpgradeEepromV12(); break;
     }
     m_modified = EVENT_CONFIG_MODEL_CHANGED; // anything to force write
     Commit();
@@ -1079,6 +1081,44 @@ void RxConfig::UpgradeEepromV11()
         m_config.pwmChannels[ch].raw = old.pwmChannels[ch].raw;
 }
 
+void RxConfig::UpgradeEepromV12()
+{
+    static_assert(__builtin_offsetof(v12_rx_config_t, roverCraftName) ==
+                      __builtin_offsetof(rx_config_t, roverCraftName),
+                  "RX config V12 prefix layout must match V13");
+    static_assert(__builtin_offsetof(rx_config_t, roverCellCount) ==
+                      __builtin_offsetof(v12_rx_config_t, roverCraftName) +
+                      sizeof(((v12_rx_config_t *)nullptr)->roverCraftName),
+                  "RX config V13 must append roverCellCount after the V12 payload");
+    v12_rx_config_t old;
+    m_eeprom->Get(0, old);
+
+    memcpy(m_config.uid, old.uid, UID_LEN);
+    CONFCOPY(serial1Protocol);
+    CONFCOPY(flash_discriminator);
+    CONFCOPY(vbat.scale);
+    CONFCOPY(vbat.offset);
+    CONFCOPY(bindStorage);
+    CONFCOPY(power);
+    CONFCOPY(antennaMode);
+    CONFCOPY(powerOnCounter);
+    CONFCOPY(forceTlmOff);
+    CONFCOPY(rateInitialIdx);
+    CONFCOPY(modelId);
+    CONFCOPY(serialProtocol);
+    CONFCOPY(failsafeMode);
+    CONFCOPY(teamraceChannel);
+    CONFCOPY(teamracePosition);
+    CONFCOPY(teamracePitMode);
+    CONFCOPY(targetSysId);
+    CONFCOPY(sourceSysId);
+    CONFCOPY(roverOsdEnabled);
+    memcpy(m_config.roverCraftName, old.roverCraftName, sizeof(m_config.roverCraftName));
+    m_config.roverCraftName[sizeof(m_config.roverCraftName) - 1] = '\0';
+    for (unsigned ch = 0; ch < 16; ++ch)
+        m_config.pwmChannels[ch].raw = old.pwmChannels[ch].raw;
+}
+
 /**
  * @brief Upgrade UID and flash_discriminator from old config, using onLoanUid if != null
  */
@@ -1293,6 +1333,7 @@ RxConfig::SetDefaults(bool commit)
     m_config.roverOsdEnabled = 1;
     strncpy(m_config.roverCraftName, "RZGX ROVER", sizeof(m_config.roverCraftName));
     m_config.roverCraftName[sizeof(m_config.roverCraftName) - 1] = '\0';
+    m_config.roverCellCount = 2;
 
     if (commit)
     {
@@ -1471,6 +1512,16 @@ void RxConfig::SetRoverCraftName(const char *name)
     if (strncmp(m_config.roverCraftName, sanitized, sizeof(m_config.roverCraftName)) != 0)
     {
         memcpy(m_config.roverCraftName, sanitized, sizeof(m_config.roverCraftName));
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+}
+
+void RxConfig::SetRoverCellCount(uint8_t cellCount)
+{
+    const uint8_t value = constrain(cellCount, 1, 8);
+    if (m_config.roverCellCount != value)
+    {
+        m_config.roverCellCount = value;
         m_modified = EVENT_CONFIG_MODEL_CHANGED;
     }
 }

@@ -19,9 +19,12 @@ CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
 #include "SerialIO.h"
 
 #define MSP_STATUS          101
+#define MSP_ANALOG          110
+#define MSP_BATTERY_STATE   130
 #define MSP_STATUS_EX       150
 #define MSP_DISPLAYPORT     182
 #define MSP_MSG_PERIOD_MS   100
+#define MSP_BATTERY_PERIOD_MS 1000
 
 struct msp_status_t
 {
@@ -43,7 +46,7 @@ struct msp_status_t
 class SerialDisplayport final : public SerialIO
 {
 public:
-    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0), m_lastOsdTransaction(0), m_engineStartBlinkStartedAt(0), m_lastArmedState(false) {}
+    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0), m_lastOsdTransaction(0), m_lastBatteryTransaction(0), m_engineStartBlinkStartedAt(0), m_lastArmedState(false) {}
     ~SerialDisplayport() override = default;
 
     void sendQueuedData(uint32_t) override {}
@@ -54,12 +57,14 @@ private:
     void send(uint8_t messageID, const void *payload, uint8_t size);
     void sendDisplayPort(uint8_t command);
     void sendDisplayPortString(uint8_t row, uint8_t col, const char *text);
+    void sendBatteryTelemetry();
     void renderRoverOsd(bool armed, const uint32_t *channelData);
     bool getArmedState();
 
     uint8_t m_receivedBytes;
     uint32_t m_receivedTimestamp;
     uint32_t m_lastOsdTransaction;
+    uint32_t m_lastBatteryTransaction;
     uint32_t m_engineStartBlinkStartedAt;
     bool m_lastArmedState;
 };

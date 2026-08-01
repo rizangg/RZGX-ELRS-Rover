@@ -16,6 +16,7 @@ CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
 
 #include "SerialDisplayport.h"
 #include "CRSFRouter.h"
+#include "devAnalogVbat.h"
 #include "OTA.h"
 #include "config.h"
 #include "options.h"
@@ -28,6 +29,7 @@ static constexpr uint8_t MSP_DP_DRAW_SCREEN = 4;
 static constexpr uint8_t OSD_COLUMNS = 53;
 static constexpr uint32_t OSD_UPDATE_INTERVAL_MS = 100;
 static constexpr uint8_t OSD_CENTER_ROW = 10;
+static constexpr uint32_t FAILSAFE_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_DURATION_MS = 1500;
 static constexpr char OSD_ARROW_DOWN = 0x60;
@@ -36,6 +38,27 @@ static constexpr char OSD_ARROW_UP = 0x68;
 static constexpr char OSD_ARROW_LEFT = 0x6C;
 static constexpr char OSD_RSSI = 0x01;
 static constexpr char OSD_LINK_QUALITY = 0x7B;
+static constexpr char OSD_BATTERY = static_cast<char>(0x90);
+
+struct msp_analog_t
+{
+    uint8_t legacyVoltageDecivolts;
+    uint16_t mAhDrawn;
+    uint16_t rssi;
+    int16_t currentCentiamps;
+    uint16_t voltageCentivolts;
+} __attribute__ ((packed));
+
+struct msp_battery_state_t
+{
+    uint8_t cellCount;
+    uint16_t capacityMah;
+    uint8_t legacyVoltageDecivolts;
+    uint16_t mAhDrawn;
+    int16_t currentCentiamps;
+    uint8_t batteryState;
+    uint16_t voltageCentivolts;
+} __attribute__ ((packed));
 
 static uint8_t centerColumn(const char *text)
 {
@@ -105,6 +128,37 @@ void SerialDisplayport::sendDisplayPortString(uint8_t row, uint8_t col, const ch
     send(MSP_DISPLAYPORT, payload, size);
 }
 
+void SerialDisplayport::sendBatteryTelemetry()
+{
+    uint16_t voltageCentivolts;
+    if (!Vbat_getVoltage(voltageCentivolts))
+        return;
+
+    const uint8_t legacyVoltageDecivolts = static_cast<uint8_t>(min(
+        static_cast<uint16_t>((voltageCentivolts + 5U) / 10U),
+        static_cast<uint16_t>(UINT8_MAX)));
+
+    const msp_analog_t analog = {
+        legacyVoltageDecivolts,
+        0,
+        0,
+        0,
+        voltageCentivolts
+    };
+    send(MSP_ANALOG, &analog, sizeof(analog));
+
+    const msp_battery_state_t battery = {
+        config.GetRoverCellCount(),
+        0,
+        legacyVoltageDecivolts,
+        0,
+        0,
+        0,
+        voltageCentivolts
+    };
+    send(MSP_BATTERY_STATE, &battery, sizeof(battery));
+}
+
 void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
 {
     const uint32_t now = millis();
@@ -123,7 +177,12 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
     m_lastArmedState = armed;
 
     const char *stateText = nullptr;
-    if (!armed)
+    if (failsafe)
+    {
+        if ((now / FAILSAFE_BLINK_INTERVAL_MS) % 2 == 0)
+            stateText = "FAILSAFE";
+    }
+    else if (!armed)
     {
         stateText = "STANDBY";
     }
@@ -141,6 +200,23 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
     char gasText[16];
     char rssiText[10];
     char lqText[12];
+    char batteryText[12];
+    uint16_t voltageCentivolts;
+    const bool voltageValid = Vbat_getVoltage(voltageCentivolts);
+    batteryText[0] = OSD_BATTERY;
+    if (voltageValid && voltageCentivolts > 0)
+    {
+        const uint8_t cellCount = config.GetRoverCellCount();
+        const uint16_t cellCentivolts = (voltageCentivolts + cellCount / 2U) / cellCount;
+        snprintf(batteryText + 1, sizeof(batteryText) - 1, " %u.%02uV",
+                 static_cast<unsigned>(cellCentivolts / 100U),
+                 static_cast<unsigned>(cellCentivolts % 100U));
+    }
+    else
+    {
+        strncpy(batteryText + 1, " -V", sizeof(batteryText) - 1);
+        batteryText[sizeof(batteryText) - 1] = '\0';
+    }
     const uint8_t rssiMagnitude = linkStats.active_antenna != 0 && linkStats.uplink_RSSI_2 != 0
         ? linkStats.uplink_RSSI_2
         : linkStats.uplink_RSSI_1;
@@ -155,6 +231,7 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
     sendDisplayPortString(0, centerColumn(craftName), craftName);
     if (stateText != nullptr)
         sendDisplayPortString(OSD_CENTER_ROW, centerColumn(stateText), stateText);
+    sendDisplayPortString(13, 1, batteryText);
     sendDisplayPortString(15, 1, steeringText);
     sendDisplayPortString(16, 1, gasText);
     sendDisplayPortString(15, rightColumn(rssiText), rssiText);
@@ -184,6 +261,12 @@ uint32_t SerialDisplayport::sendRCFrame(bool frameAvailable, bool frameMissed, u
 
     // Send extended status MSP
     send(MSP_STATUS_EX, &status, sizeof(status));
+
+    if (m_receivedBytes >= 6 && millis() - m_lastBatteryTransaction >= MSP_BATTERY_PERIOD_MS)
+    {
+        sendBatteryTelemetry();
+        m_lastBatteryTransaction = millis();
+    }
 
     if (config.GetRoverOsdEnabled() && m_receivedBytes >= 6 && millis() - m_lastOsdTransaction >= OSD_UPDATE_INTERVAL_MS)
     {

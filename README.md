@@ -28,6 +28,33 @@ Current public baseline: **Stable 02 / MVP 0.5D**.
 Flash only to the exact receiver target above. Other ExpressLRS receivers are
 not validated by this baseline.
 
+## Field-Tested RadioMaster ER5A/C V2 Pre-release
+
+MVP **0.5H** is a separate, field-tested pre-release for the shared official
+RadioMaster ER5A V2 / ER5C V2 target. Physical vehicle testing was completed on
+an **ER5C V2**. The ER5A V2 uses the same ExpressLRS target and firmware
+identity, but has not been physically tested by this project.
+
+- Target: **RadioMaster ER5A/C V2 2.4GHz PWM RX**
+- Binary: [`RZGX-Rover-ELRS-MVP-0.5H-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5H-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
+- SHA256: [`SHA256SUMS-0.5H.txt`](work/builds/SHA256SUMS-0.5H.txt)
+- Release notes: [`RadioMaster ER5A/C V2 MVP 0.5H`](docs/releases/EXPERIMENTAL-ER5A-ER5C-V2-0.5H.md)
+- Test record: [`ER5C V2 MVP 0.5H field validation`](docs/TEST_LOG.md#radiomaster-er5c-v2--mvp-05h)
+
+This build adds receiver VBAT telemetry as whole-pack voltage to the native DJI
+battery field and filtered average-per-cell voltage to the custom Rover OSD.
+It also retains the rover control, arming, UART, Wi-Fi, and failsafe behavior
+validated on the physical ER5C V2.
+
+| Approximately 60 m with physical obstructions | Approximately 5 m |
+| --- | --- |
+| ![ER5C 0.5H field test at approximately 60 meters](docs/assets/er5c-5h/field-test-60m-nlos.png) | ![ER5C 0.5H field test at approximately 5 meters](docs/assets/er5c-5h/field-test-5m.png) |
+
+The 60 m observation was not a clean line-of-sight test and used a replacement
+LHCP antenna on the RadioMaster Boxer. Treat it as field evidence, not a
+controlled range specification. Flash only the ER5A/C V2 artifact to that exact
+receiver target.
+
 ## What It Does
 
 The receiver continues to provide PWM outputs for vehicle control, while the

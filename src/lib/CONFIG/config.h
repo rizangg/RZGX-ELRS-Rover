@@ -16,7 +16,7 @@
 #define RX_CONFIG_MAGIC     (0b10U << 30)
 
 #define TX_CONFIG_VERSION   8U
-#define RX_CONFIG_VERSION   12U
+#define RX_CONFIG_VERSION   13U
 
 #if defined(TARGET_TX)
 
@@ -256,6 +256,7 @@ typedef struct __attribute__((packed)) {
     uint8_t     sourceSysId;
     uint8_t     roverOsdEnabled;
     char        roverCraftName[17];
+    uint8_t     roverCellCount;
 } rx_config_t;
 
 class RxConfig
@@ -292,6 +293,7 @@ public:
     uint8_t GetSourceSysId()  const { return m_config.sourceSysId; }
     bool GetRoverOsdEnabled() const { return m_config.roverOsdEnabled != 0; }
     const char *GetRoverCraftName() const { return m_config.roverCraftName; }
+    uint8_t GetRoverCellCount() const { return constrain(m_config.roverCellCount, 1, 8); }
     rx_config_bindstorage_t GetBindStorage() const { return (rx_config_bindstorage_t)m_config.bindStorage; }
     bool IsOnLoan() const;
 
@@ -318,6 +320,7 @@ public:
     void SetSourceSysId(uint8_t sysID);
     void SetRoverOsdEnabled(bool enabled);
     void SetRoverCraftName(const char *name);
+    void SetRoverCellCount(uint8_t cellCount);
     void SetBindStorage(rx_config_bindstorage_t value);
     void ReturnLoan();
 
@@ -330,6 +333,7 @@ private:
     void UpgradeEepromV7V8(uint8_t ver);
     void UpgradeEepromV9V10(uint8_t ver);
     void UpgradeEepromV11();
+    void UpgradeEepromV12();
 
     rx_config_t m_config;
     ELRS_EEPROM *m_eeprom;

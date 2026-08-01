@@ -1,5 +1,61 @@
 # Test Log
 
+## RadioMaster ER5C V2 / MVP 0.5H
+
+Test date: `2026-08-01`
+
+Test setup:
+
+- RadioMaster ER5C V2 receiver running RZGX `4.0.1.5H`
+- RadioMaster Boxer with internal 2.4GHz ELRS transmitter
+- DJI Air Unit with MSP DisplayPort OSD
+- Receiver analog VBAT input calibrated before the test
+- Output 2 assigned to Serial TX and Output 3 assigned to Serial RX
+- RadioMaster Boxer stock T antenna unavailable; an LHCP antenna with the same
+  SMA connection was used instead
+
+Test duration and conditions:
+
+- Two daytime vehicle runs longer than five minutes each
+- One night vehicle run longer than ten minutes
+- Indoor and outdoor operation
+- Distance observation around 60 m with concrete walls, metal fencing, and
+  neighboring structures obstructing clean line of sight
+
+Results:
+
+- Flashing to 0.5H completed normally.
+- Arming and PWM steering/throttle control behaved as intended.
+- Turning off the transmitter triggered the FAILSAFE indication.
+- Steering and ESC outputs returned to their configured neutral positions on
+  failsafe.
+- STR and GAS OSD fields retained the last valid received values during
+  failsafe; this is display behavior and did not reflect the neutral PWM output.
+- Custom Rover OSD battery voltage displayed filtered average-per-cell voltage.
+- Native DJI battery voltage displayed whole-pack voltage.
+- At approximately 60 m with physical obstructions, Telemetry Lost followed by
+  Telemetry Recovered occurred without FAILSAFE. Observed LQ varied around
+  `76-90%` during that condition.
+- No performance failure or unexpected behavior was observed during the three
+  runs.
+
+Field evidence:
+
+- [Approximately 60 m with physical obstructions](assets/er5c-5h/field-test-60m-nlos.png):
+  timer `08:33`, custom battery `3.57 V` per cell, native battery `7.1 V`
+  whole pack, RSSI `-90`, and LQ `100%` in the captured frame.
+- [Approximately 5 m](assets/er5c-5h/field-test-5m.png): timer `00:38`, custom
+  battery `3.71 V` per cell, native battery `7.4 V` whole pack, RSSI `-71`, and
+  LQ `100%` in the captured frame.
+- [PWM and serial routing](assets/er5c-5h/webui-pwm-serial-routing.jpg)
+- [Rover OSD menu](assets/er5c-5h/webui-rover-osd-menu.jpg)
+- [Rover OSD settings and two-cell configuration](assets/er5c-5h/webui-rover-osd-settings.jpg)
+- [DisplayPort serial selection](assets/er5c-5h/webui-displayport-serial.jpg)
+
+The distance and signal observations are field evidence, not calibrated range
+measurements. The replacement transmitter antenna and obstructed path prevent a
+direct comparison with controlled stock-antenna line-of-sight tests.
+
 ## Stable 02 / MVP 0.5D
 
 Summary:

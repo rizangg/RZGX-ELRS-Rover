@@ -364,6 +364,7 @@ static void GetConfiguration(AsyncWebServerRequest *request)
     cfg["vbind"] = config.GetBindStorage();
     cfg["rover-osd-enabled"] = config.GetRoverOsdEnabled();
     cfg["rover-craft-name"] = config.GetRoverCraftName();
+    cfg["rover-cell-count"] = config.GetRoverCellCount();
     for (int ch=0; ch<GPIO_PIN_PWM_OUTPUTS_COUNT; ++ch)
     {
       const auto channel = cfg["pwm"][ch].to<JsonObject>();
@@ -565,6 +566,9 @@ static void UpdateConfiguration(AsyncWebServerRequest *request, JsonVariant &jso
   config.SetRoverOsdEnabled(json["rover-osd-enabled"] | true);
   const char *roverCraftName = json["rover-craft-name"] | config.GetRoverCraftName();
   config.SetRoverCraftName(roverCraftName);
+  long roverCellCount = json["rover-cell-count"] | config.GetRoverCellCount();
+  roverCellCount = constrain(roverCellCount, 1L, 8L);
+  config.SetRoverCellCount(static_cast<uint8_t>(roverCellCount));
   JsonUidToConfig(json);
 
   JsonArray pwm = json["pwm"].as<JsonArray>();

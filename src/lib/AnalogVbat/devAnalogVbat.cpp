@@ -16,6 +16,8 @@
 typedef uint16_t vbatAnalogStorage_t;
 static MedianAvgFilter<vbatAnalogStorage_t, VBAT_SMOOTH_CNT>vbatSmooth;
 static uint8_t vbatUpdateScale;
+static uint16_t latestVbatCentivolts;
+static bool latestVbatValid;
 
 #if defined(PLATFORM_ESP32)
 #include "esp_adc_cal.h"
@@ -30,6 +32,12 @@ void Vbat_enableSlowUpdate(bool enable)
     vbatUpdateScale = enable ? 2 : 1;
 }
 
+bool Vbat_getVoltage(uint16_t &centivolts)
+{
+    centivolts = latestVbatCentivolts;
+    return latestVbatValid;
+}
+
 static bool initialize()
 {
     return GPIO_ANALOG_VBAT != UNDEF_PIN;
@@ -38,6 +46,8 @@ static bool initialize()
 static int start()
 {
     vbatUpdateScale = 1;
+    latestVbatCentivolts = 0;
+    latestVbatValid = false;
 #if defined(PLATFORM_ESP32)
     analogReadResolution(12);
 
@@ -70,16 +80,23 @@ static void reportVbat()
         adc = esp_adc_cal_raw_to_voltage(adc, vbatAdcUnitCharacterics);
 #endif
 
-    int32_t vbat;
+    int32_t adjustedAdc;
     // For negative offsets, anything between abs(OFFSET) and 0 is considered 0
-    if (ANALOG_VBAT_OFFSET < 0 && adc <= -ANALOG_VBAT_OFFSET)
-        vbat = 0;
+    if (ANALOG_VBAT_OFFSET < 0 && adc <= static_cast<uint32_t>(-ANALOG_VBAT_OFFSET))
+        adjustedAdc = 0;
     else
-        vbat = ((int32_t)adc - ANALOG_VBAT_OFFSET) * 100 / ANALOG_VBAT_SCALE;
+        adjustedAdc = static_cast<int32_t>(adc) - ANALOG_VBAT_OFFSET;
+
+    if (adjustedAdc < 0)
+        adjustedAdc = 0;
+    const uint32_t vbatDecivolts = static_cast<uint32_t>(adjustedAdc) * 100U / ANALOG_VBAT_SCALE;
+    const uint32_t vbatCentivolts = static_cast<uint32_t>(adjustedAdc) * 1000U / ANALOG_VBAT_SCALE;
+    latestVbatCentivolts = static_cast<uint16_t>(min(vbatCentivolts, static_cast<uint32_t>(UINT16_MAX)));
+    latestVbatValid = true;
 
     CRSF_MK_FRAME_T(crsf_sensor_battery_t) crsfbatt = { 0 };
     // Values are MSB first (BigEndian)
-    crsfbatt.p.voltage = htobe16((uint16_t)vbat);
+    crsfbatt.p.voltage = htobe16(static_cast<uint16_t>(min(vbatDecivolts, static_cast<uint32_t>(UINT16_MAX))));
     // No sensors for current, capacity, or remaining available
 
     crsfRouter.SetHeaderAndCrc((crsf_header_t *)&crsfbatt, CRSF_FRAMETYPE_BATTERY_SENSOR, CRSF_FRAME_SIZE(sizeof(crsf_sensor_battery_t)));
