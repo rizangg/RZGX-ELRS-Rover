@@ -9,36 +9,31 @@ This project is focused on RC rovers, crawlers, trail trucks, and small
 adventure vehicles. It is not a flight controller and it does not require
 Betaflight, INAV, or any external FC.
 
-> Current field baseline: **Stable 02 / MVP 0.5D**
+> Current stable releases:
 >
-> Target tested: **BETAFPV PWM 2.4GHz RX**
+> - **Stable 02 / MVP 0.5D** - BETAFPV PWM 2.4GHz RX
+> - **Stable 03 / MVP 0.5H** - RadioMaster ER5C V2
 >
 > ExpressLRS base: **4.0.1**
->
-> RZGX firmware label: **4.0.1.5D**
 
-## Stable Firmware Download
+## Stable Firmware Downloads
 
-Current public baseline: **Stable 02 / MVP 0.5D**.
+### Stable 02 / MVP 0.5D - BETAFPV PWM 2.4GHz RX
 
 - Target: **BETAFPV PWM 2.4GHz RX**
 - Binary: [`RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz)
 - Release notes: [`Stable 02 / MVP 0.5D`](docs/releases/STABLE-02-MVP-0.5D.md)
 
-Flash only to the exact receiver target above. Other ExpressLRS receivers are
-not validated by this baseline.
+### Stable 03 / MVP 0.5H - RadioMaster ER5C V2
 
-## Field-Tested RadioMaster ER5A/C V2 Pre-release
-
-MVP **0.5H** is a separate, field-tested pre-release for the shared official
-RadioMaster ER5A V2 / ER5C V2 target. Physical vehicle testing was completed on
-an **ER5C V2**. The ER5A V2 uses the same ExpressLRS target and firmware
-identity, but has not been physically tested by this project.
+MVP **0.5H** is stable for the physically tested **RadioMaster ER5C V2**. The
+ER5A V2 uses the same official ExpressLRS target and firmware identity, but has
+not been physically tested by this project and is not described as stable.
 
 - Target: **RadioMaster ER5A/C V2 2.4GHz PWM RX**
 - Binary: [`RZGX-Rover-ELRS-MVP-0.5H-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5H-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
 - SHA256: [`SHA256SUMS-0.5H.txt`](work/builds/SHA256SUMS-0.5H.txt)
-- Release notes: [`RadioMaster ER5A/C V2 MVP 0.5H`](docs/releases/EXPERIMENTAL-ER5A-ER5C-V2-0.5H.md)
+- Release notes: [`Stable 03 / RadioMaster ER5C V2 / MVP 0.5H`](docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md)
 - Test record: [`ER5C V2 MVP 0.5H field validation`](docs/TEST_LOG.md#radiomaster-er5c-v2--mvp-05h)
 
 This build adds receiver VBAT telemetry as whole-pack voltage to the native DJI
@@ -50,10 +45,12 @@ validated on the physical ER5C V2.
 | --- | --- |
 | ![ER5C 0.5H field test at approximately 60 meters](docs/assets/er5c-5h/field-test-60m-nlos.png) | ![ER5C 0.5H field test at approximately 5 meters](docs/assets/er5c-5h/field-test-5m.png) |
 
-The 60 m observation was not a clean line-of-sight test and used a replacement
-LHCP antenna on the RadioMaster Boxer. Treat it as field evidence, not a
-controlled range specification. Flash only the ER5A/C V2 artifact to that exact
-receiver target.
+The first 60 m obstructed observation used a replacement LHCP antenna and
+produced one Telemetry Lost / Telemetry Recovered event without failsafe. A
+follow-up 15-minute run with the RadioMaster Boxer stock T antenna repeatedly
+crossed the same area without that notification and kept LQ above 90 percent.
+These are field observations, not a controlled range specification. Flash only
+the ER5A/C V2 artifact to that exact receiver target.
 
 ## What It Does
 
@@ -239,6 +236,7 @@ See:
 
 - [STABLE-BASELINE.md](STABLE-BASELINE.md)
 - [docs/releases/STABLE-02-MVP-0.5D.md](docs/releases/STABLE-02-MVP-0.5D.md)
+- [docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md](docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md)
 
 Stable 02 / MVP 0.5D was selected after repeated indoor and outdoor tests where:
 
@@ -247,6 +245,11 @@ Stable 02 / MVP 0.5D was selected after repeated indoor and outdoor tests where:
 - No repeated telemetry lost / telemetry recovered loop was observed.
 - CH2 continuous use stayed stable.
 - The same target receiver type also worked on another vehicle.
+
+Stable 03 / MVP 0.5H promotes the exact ER5C V2 binary that passed repeated
+vehicle tests, failsafe checks, battery-telemetry validation, and a continuous
+15-minute stock-antenna follow-up run. The ER5A V2 compatibility statement
+remains target-based until that hardware is tested separately.
 
 ## Relationship to ExpressLRS Upstream
 

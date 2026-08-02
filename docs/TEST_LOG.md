@@ -2,7 +2,7 @@
 
 ## RadioMaster ER5C V2 / MVP 0.5H
 
-Test date: `2026-08-01`
+Test dates: `2026-08-01` and `2026-08-02`
 
 Test setup:
 
@@ -11,8 +11,9 @@ Test setup:
 - DJI Air Unit with MSP DisplayPort OSD
 - Receiver analog VBAT input calibrated before the test
 - Output 2 assigned to Serial TX and Output 3 assigned to Serial RX
-- RadioMaster Boxer stock T antenna unavailable; an LHCP antenna with the same
-  SMA connection was used instead
+- Initial tests used an LHCP replacement antenna with the same SMA connection
+  because the RadioMaster Boxer stock T antenna was temporarily unavailable
+- Follow-up testing used the recovered RadioMaster Boxer stock T antenna
 
 Test duration and conditions:
 
@@ -39,6 +40,20 @@ Results:
 - No performance failure or unexpected behavior was observed during the three
   runs.
 
+Stock-antenna follow-up on `2026-08-02`:
+
+- One continuous 15-minute vehicle run completed with consistent performance
+  from start to finish.
+- The vehicle repeatedly crossed the same approximately 60 m physically
+  obstructed area that had produced Telemetry Lost / Telemetry Recovered with
+  the replacement LHCP antenna.
+- No Telemetry Lost / Telemetry Recovered audio notification occurred during
+  the follow-up run.
+- LQ remained above `90%` in that area, compared with the earlier observed
+  `75-80%` dips using the replacement antenna.
+- No failsafe, control anomaly, OSD anomaly, or other performance failure was
+  observed.
+
 Field evidence:
 
 - [Approximately 60 m with physical obstructions](assets/er5c-5h/field-test-60m-nlos.png):
@@ -55,8 +70,9 @@ Field evidence:
 - [DisplayPort serial selection](assets/er5c-5h/webui-displayport-serial.jpg)
 
 The distance and signal observations are field evidence, not calibrated range
-measurements. The replacement transmitter antenna and obstructed path prevent a
-direct comparison with controlled stock-antenna line-of-sight tests.
+measurements. The improvement with the stock transmitter antenna is consistent
+with an antenna, orientation, or installation effect, but does not establish a
+controlled range specification.
 
 ## Stable 02 / MVP 0.5D
 
