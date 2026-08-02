@@ -2,7 +2,10 @@
 
 ## Near Term
 
-- Keep Stable 02 / MVP 0.5D as the field baseline.
+- Implement the requirements recorded in [Next Patch Notes](NEXT_PATCH_NOTES.md)
+  without replacing the preserved 0.5H baseline or artifacts.
+- Preserve Stable 02 / MVP 0.5D for BETAFPV and Stable 03 / MVP 0.5H for the
+  physically tested RadioMaster ER5C V2.
 - Avoid large OSD additions unless link stability remains proven.
 - Test more receiver samples of the same target.
 - Document exact wiring photos and target configuration screenshots.
@@ -27,4 +30,3 @@ These belong in the full ESP32-based RZGX Rover Controller instead:
 - Drive modes
 - Complex channel assignment
 - Servo pan/tilt control
-
