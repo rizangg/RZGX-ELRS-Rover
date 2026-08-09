@@ -1,0 +1,26 @@
+name: RZGX Stable Validation
+
+on:
+  push:
+    branches:
+      - rzgx-rover-elrs-mvp
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate stable artifacts and documentation
+        run: python .github/scripts/validate_rzgx_stable.py

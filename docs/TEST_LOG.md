@@ -31,8 +31,9 @@ Results:
   overlapped.
 - Arming, PWM steering/throttle control, UART DisplayPort, Wi-Fi configuration,
   and failsafe neutral positions retained the validated 0.5H behavior.
-- No event triggered failsafe and no performance failure was observed during
-  the recorded runs.
+- No unintended failsafe or performance failure occurred during the recorded
+  runs. A deliberate failsafe test confirmed that `FAILSAFE` overrides the
+  low-battery `RETURN NOW` warning.
 - Link quality remained stable at the farthest observed distance.
 
 Telemetry observations:

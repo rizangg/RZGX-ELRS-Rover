@@ -1,6 +1,7 @@
 # Stable 02 / MVP 0.5D
 
-Stable 02 / MVP 0.5D is the current RZGX Rover-ELRS Controller baseline.
+Stable 02 / MVP 0.5D is the current stable baseline for the physically tested
+BETAFPV PWM 2.4GHz RX target. ER5C uses a separate target-specific stable build.
 
 ## Firmware
 
@@ -8,6 +9,7 @@ Stable 02 / MVP 0.5D is the current RZGX Rover-ELRS Controller baseline.
 - RZGX label: `4.0.1.5D`
 - Target: `BETAFPV PWM 2.4GHz RX`
 - Binary: `work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz`
+- SHA-256: `d2ad3cfca4d72dda705390a1160650404338547fe5259649825b6da0022246ba`
 
 ## Field Result
 

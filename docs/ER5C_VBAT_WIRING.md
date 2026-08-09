@@ -1,7 +1,7 @@
 # RadioMaster ER5C V2 VBAT Sense Wiring
 
 This note documents the field-tested voltage-sense arrangement used with the
-RadioMaster ER5C V2 and RZGX Rover ELRS 0.5H. RadioMaster specifies automatic
+RadioMaster ER5C V2 and RZGX Rover ELRS 0.5H and 0.5I. RadioMaster specifies automatic
 selection between external battery voltage and receiver/ESC-BEC voltage, with
 an external telemetry detection range of `4.0-35 V`.
 
@@ -28,9 +28,19 @@ are already electrically common.
 
 This makes source selection simple in the tested installation: the same
 positive sense lead can be moved between the two external batteries, or left
-disconnected to monitor the receiver supply. RZGX 0.5H sends the selected
-whole-pack value to the native DJI battery field and uses the configured cell
-count for its average-per-cell Rover OSD value.
+disconnected to monitor the receiver supply.
+
+## Stable 04 / MVP 0.5I Voltage Mode
+
+| WebUI mode | Required physical arrangement | Display behavior |
+| --- | --- | --- |
+| `RX` | Leave the external sensing lead disconnected | Receiver/BEC voltage is shown unchanged in both OSD fields |
+| `1S`-`8S` | Connect to verified whole-pack positive and select the actual series cell count | Native DJI shows whole pack; Rover OSD shows average per cell |
+
+Voltage Mode does not electrically switch the source. Moving or disconnecting
+the sensing lead remains a physical user action. Selecting `RX` automatically
+disables the low-battery warning. In `1S`-`8S` modes, the optional warning uses
+the displayed average-per-cell voltage, configured threshold, and delay.
 
 ## Safety Notes
 
@@ -43,7 +53,8 @@ count for its average-per-cell Rover OSD value.
 - Confirm common ground before attaching a one-wire positive sense lead. If the
   grounds are isolated, stop and correct the grounding arrangement first.
 - Keep the measured voltage inside the receiver's official `4.0-35 V` range.
-  For LiPo batteries, the RZGX configurator supports `1S-8S` cell-count values.
+  For external LiPo sensing, the RZGX configurator supports `1S-8S` cell-count
+  values. Select the actual series count of the physically connected battery.
 - A loose Dupont contact can bridge adjacent balance pins. An insulated,
   strain-relieved adapter or JST-XH breakout is safer than an exposed probe.
 - Powering down before moving the lead is the safest practice. If it is moved

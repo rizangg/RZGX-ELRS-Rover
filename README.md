@@ -16,15 +16,19 @@ Betaflight, INAV, or any external FC.
 >
 > ExpressLRS base: **4.0.1**
 
+GitHub release packages and immutable tags are available on the
+[Releases page](https://github.com/rizangg/RZGX-ELRS-Rover/releases).
+
 ## Stable Firmware Downloads
 
 ### Stable 02 / MVP 0.5D - BETAFPV PWM 2.4GHz RX
 
 - Target: **BETAFPV PWM 2.4GHz RX**
 - Binary: [`RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz)
+- SHA-256: [`SHA256SUMS-STABLE-02-BETAFPV-0.5D.txt`](work/builds/SHA256SUMS-STABLE-02-BETAFPV-0.5D.txt)
 - Release notes: [`Stable 02 / MVP 0.5D`](docs/releases/STABLE-02-MVP-0.5D.md)
 
-### Stable 03 / MVP 0.5H - RadioMaster ER5C V2
+### Previous Stable 03 / MVP 0.5H - RadioMaster ER5C V2
 
 MVP **0.5H** is stable for the physically tested **RadioMaster ER5C V2**. The
 ER5A V2 uses the same official ExpressLRS target and firmware identity, but has
@@ -69,19 +73,29 @@ Only the ER5C V2 build is promoted as Stable 04. ER5A V2 shares the official
 target identity but remains physically untested by this project, and the
 BETAFPV 0.5I build is not promoted as stable.
 
+### Stable Capability Matrix
+
+| Capability | BETAFPV Stable 02 / 0.5D | ER5C Stable 04 / 0.5I |
+| --- | --- | --- |
+| PWM steering and gas | Yes | Yes |
+| DJI MSP DisplayPort | Yes | Yes |
+| Craft, arming, FAILSAFE, STR, GAS, RSSI, LQ | Yes | Yes |
+| Receiver analog voltage sensing | No project-validated support | Yes |
+| RX or 1S-8S voltage interpretation | No | Yes |
+| Native DJI whole-pack voltage | No | Yes |
+| Optional low-battery `RETURN NOW` warning | No | Yes |
+
 ## What It Does
 
 The receiver continues to provide PWM outputs for vehicle control, while the
 same receiver also renders a small OSD through MSP DisplayPort.
 
-Current MVP OSD:
+Common Rover OSD fields on both stable targets:
 
 - Craft Name
 - STANDBY state
 - ENGINE START arming transition
 - FAILSAFE notification
-- Battery voltage
-- Optional low-battery RETURN NOW warning
 - Steering percentage
 - Gas percentage
 - RSSI value
@@ -116,6 +130,16 @@ The same firmware was tested on two receivers of the same target type. Both
 receivers were able to use their own Craft Name and Binding Phrase through the
 receiver WiFi Configurator.
 
+Stable 04 / MVP 0.5I has additionally been field-tested on:
+
+- RadioMaster ER5C V2
+- RadioMaster MT12 with internal 2.4GHz ELRS transmitter
+- Dynamic Power enabled with a 250mW maximum
+- DJI Air Unit with MSP DisplayPort OSD
+- Calibrated ER5C analog VBAT sensing with LiPo 2S and 4S packs
+- More than five runs of approximately 5-15 minutes, including obstructed
+  operation out to approximately 150 m
+
 ## Field Test Gallery
 
 These field captures show the rover OSD during daytime range testing, extended
@@ -133,7 +157,7 @@ for the recorded observations.
 
 ## Required Receiver Output Mapping
 
-For the tested BETAFPV PWM receiver target:
+For both tested stable receiver installations:
 
 | Output | Function |
 | --- | --- |
@@ -150,8 +174,9 @@ In the receiver WiFi Configurator, configure:
 - Serial protocol as DisplayPort/MSP DisplayPort
 - Rover OSD enabled
 
-The exact labels can depend on the ExpressLRS configurator page, but the tested
-setup uses Output 2/3 for the UART pair.
+The exact labels can depend on the target configurator page, but the tested
+BETAFPV and ER5C installations both use Output 2/3 for the UART pair. Always
+confirm the mapping after flashing or resetting receiver configuration.
 
 ## DJI Air Unit Wiring
 
@@ -230,8 +255,11 @@ Field-tested recovery wiring:
 - Hold the receiver BOOT button before starting the flash and keep holding it
   until flashing finishes.
 
-In the tested recovery case, USB power was enough and no separate 5V supply was
-needed. Use the exact **BETAFPV PWM 2.4GHz RX** target when recovering.
+This recovery procedure was physically tested only on the BETAFPV PWM receiver.
+In that test, USB power was enough and no separate 5V supply was needed. Do not
+select the BETAFPV target when recovering an ER5C. For ER5C recovery, use only
+the official **RadioMaster ER5A/C V2 2.4GHz PWM RX** target and RadioMaster's
+documented bootloader procedure.
 
 ## Configuration Notes
 

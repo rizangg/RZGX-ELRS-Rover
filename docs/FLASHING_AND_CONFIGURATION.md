@@ -15,17 +15,25 @@ Use the standard receiver WiFi update page.
 
 ## Target Warning
 
-Only flash firmware built for the exact target:
+Only flash firmware built for the exact receiver target:
 
-`BETAFPV PWM 2.4GHz RX`
+| Tested receiver | Required firmware identity | Current stable build |
+| --- | --- | --- |
+| BETAFPV PWM 2.4GHz RX | `BETAFPV PWM 2.4GHz RX` | Stable 02 / MVP 0.5D |
+| RadioMaster ER5C V2 | `RadioMaster ER5A/C V2 2.4GHz PWM RX` | Stable 04 / MVP 0.5I |
+
+ER5A V2 shares the ER5A/C V2 firmware identity but has not been physically
+validated by this project.
 
 Flashing the wrong target can make the receiver fail to boot and may require
 USB-to-UART recovery.
 
 ## USB-to-UART Recovery
 
-If WiFi mode is unavailable after a bad flash, use a 3.3V USB-to-UART adapter
-such as a CP2102 and the exact `BETAFPV PWM 2.4GHz RX` target.
+The following USB-to-UART procedure was physically tested only on the BETAFPV
+PWM receiver. If its WiFi mode is unavailable after a bad flash, use a 3.3V
+USB-to-UART adapter such as a CP2102 and the exact
+`BETAFPV PWM 2.4GHz RX` target.
 
 Field-tested wiring:
 
@@ -45,6 +53,10 @@ Field-tested bootloader sequence:
 In the tested recovery case, USB power was enough and a separate external 5V
 supply was not required.
 
+Do not apply the BETAFPV target or boot sequence to an ER5C. For ER5C recovery,
+use the official `RadioMaster ER5A/C V2 2.4GHz PWM RX` target and RadioMaster's
+documented bootloader procedure.
+
 ## Binding
 
 Use the normal ExpressLRS Binding page.
@@ -61,7 +73,7 @@ options block. A bad binary patch can break binding or option persistence.
 
 ## Output Mapping
 
-For the tested setup:
+For the tested BETAFPV and ER5C setups:
 
 | Output | Setting |
 | --- | --- |
@@ -73,6 +85,27 @@ For the tested setup:
 
 Then set the serial protocol to DisplayPort/MSP DisplayPort and enable Rover
 OSD.
+
+## ER5C Stable 04 Voltage Configuration
+
+The ER5C V2 Stable 04 WebUI provides these `Voltage Mode` choices:
+
+| Mode | Physical sensing lead | Custom Rover OSD | Native DJI battery field |
+| --- | --- | --- | --- |
+| `RX` | External sensing lead disconnected | Receiver/ESC-BEC voltage | Same receiver/ESC-BEC voltage |
+| `1S`-`8S` | Connected to verified whole-pack positive | Average voltage per cell | Whole-pack voltage |
+
+The menu changes only how firmware interprets the analog reading. It cannot
+select or switch the electrical voltage source. Choosing the wrong mode, cell
+count, or physical connection produces misleading voltage information.
+
+The optional low-battery warning is available only in `1S`-`8S` modes. It uses
+the configured average-per-cell threshold and continuous delay. Selecting `RX`
+automatically disables the warning because regulated BEC voltage is not a
+reliable battery-state indicator.
+
+See [ER5C V2 VBAT Sense Wiring](ER5C_VBAT_WIRING.md) before connecting the
+external sensing lead.
 
 ## DJI Wiring
 

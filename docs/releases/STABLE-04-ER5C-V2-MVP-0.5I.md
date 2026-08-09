@@ -48,14 +48,34 @@ The tests covered LiPo 2S and 4S voltage interpretation, low-battery warning,
 arming, control output, failsafe behavior, WebUI settings, and obstructed
 outdoor operation out to approximately 150 m.
 
-No performance failure or event triggering failsafe was observed. Telemetry
-Lost / Telemetry Recovered notifications occurred in some obstructed positions
+No unintended failsafe or performance failure was observed. Telemetry Lost /
+Telemetry Recovered notifications occurred in some obstructed positions
 without affecting control or triggering failsafe. A companion receiver running
 original ExpressLRS 3.3.1 also produced telemetry notifications at longer
 obstructed range, so these observations are not attributed solely to 0.5I.
 
 The notification-order test confirmed that `FAILSAFE` remains above the
 low-battery `RETURN NOW` warning.
+
+## Build Provenance
+
+The exact field-tested binary embeds Git hash `026304`, because it was built
+from the complete 0.5I working tree before that source was committed. The source
+and Stable 04 documentation were subsequently committed as `cc29d0d` without
+rebuilding or replacing the tested binary.
+
+Consequently, the embedded hash identifies the build's base commit rather than
+the later commit containing the complete 0.5I source. Distribution integrity is
+defined by the SHA-256 values below. Future releases should be committed and
+tagged before building so their embedded Git hash directly identifies the
+release source.
+
+[`work/package_0_5i_er5c.py`](../../work/package_0_5i_er5c.py) preserves the
+ER5-specific packaging and validation method. It requires an original ER5 V2
+reference image so target options and binding UID can be carried across without
+printing sensitive values. Rebuilding today will naturally embed a different
+Git hash, so the published SHA-256 manifest remains the authority for the exact
+field-tested Stable 04 files.
 
 ## Stable Artifacts
 
