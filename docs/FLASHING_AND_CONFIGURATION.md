@@ -85,7 +85,7 @@ The tested setup uses separate power sources:
 Receiver side wiring:
 
 | Receiver Pin | Connects To | Notes |
-| --- | --- |
+| --- | --- | --- |
 | Output 2 `S` / TX | DJI Air Unit RX | UART signal |
 | Output 2 `V` | Not connected | Do not power the Air Unit from this pin |
 | Output 2 `G` | DJI Air Unit GND | Common ground |

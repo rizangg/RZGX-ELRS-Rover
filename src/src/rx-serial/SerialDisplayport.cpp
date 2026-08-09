@@ -32,6 +32,9 @@ static constexpr uint8_t OSD_CENTER_ROW = 10;
 static constexpr uint32_t FAILSAFE_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_DURATION_MS = 1500;
+static constexpr uint32_t LOW_BATTERY_BLINK_INTERVAL_MS = 500;
+static constexpr uint16_t LOW_BATTERY_HYSTERESIS_CENTIVOLTS = 10;
+static constexpr uint32_t LOW_BATTERY_RECOVERY_MS = 2000;
 static constexpr char OSD_ARROW_DOWN = 0x60;
 static constexpr char OSD_ARROW_RIGHT = 0x64;
 static constexpr char OSD_ARROW_UP = 0x68;
@@ -148,7 +151,7 @@ void SerialDisplayport::sendBatteryTelemetry()
     send(MSP_ANALOG, &analog, sizeof(analog));
 
     const msp_battery_state_t battery = {
-        config.GetRoverCellCount(),
+        static_cast<uint8_t>(max(config.GetRoverCellCount(), static_cast<uint8_t>(1))),
         0,
         legacyVoltageDecivolts,
         0,
@@ -157,6 +160,81 @@ void SerialDisplayport::sendBatteryTelemetry()
         voltageCentivolts
     };
     send(MSP_BATTERY_STATE, &battery, sizeof(battery));
+}
+
+void SerialDisplayport::resetLowBatteryWarning()
+{
+    m_lowBatteryStartedAt = 0;
+    m_lowBatteryRecoveryStartedAt = 0;
+    m_lowBatteryPending = false;
+    m_lowBatteryRecovering = false;
+    m_lowBatteryWarningActive = false;
+}
+
+bool SerialDisplayport::updateLowBatteryWarning(uint32_t now, bool voltageValid, uint16_t displayedCentivolts)
+{
+    if (!config.GetRoverLowBatteryEnabled() || config.GetRoverCellCount() == 0 ||
+        !voltageValid || displayedCentivolts == 0)
+    {
+        resetLowBatteryWarning();
+        return false;
+    }
+
+    const uint16_t threshold = config.GetRoverLowBatteryThresholdCentivolts();
+    if (!m_lowBatteryWarningActive)
+    {
+        m_lowBatteryRecovering = false;
+        m_lowBatteryRecoveryStartedAt = 0;
+        if (displayedCentivolts < threshold)
+        {
+            const uint16_t delayMs = config.GetRoverLowBatteryDelayMs();
+            if (delayMs == 0)
+            {
+                m_lowBatteryWarningActive = true;
+                m_lowBatteryPending = false;
+            }
+            else if (!m_lowBatteryPending)
+            {
+                m_lowBatteryPending = true;
+                m_lowBatteryStartedAt = now;
+            }
+            else if (now - m_lowBatteryStartedAt >= delayMs)
+            {
+                m_lowBatteryWarningActive = true;
+                m_lowBatteryPending = false;
+            }
+        }
+        else
+        {
+            m_lowBatteryPending = false;
+            m_lowBatteryStartedAt = 0;
+        }
+    }
+    else
+    {
+        m_lowBatteryPending = false;
+        m_lowBatteryStartedAt = 0;
+        const uint16_t recoveryThreshold = threshold + LOW_BATTERY_HYSTERESIS_CENTIVOLTS;
+        if (displayedCentivolts >= recoveryThreshold)
+        {
+            if (!m_lowBatteryRecovering)
+            {
+                m_lowBatteryRecovering = true;
+                m_lowBatteryRecoveryStartedAt = now;
+            }
+            else if (now - m_lowBatteryRecoveryStartedAt >= LOW_BATTERY_RECOVERY_MS)
+            {
+                resetLowBatteryWarning();
+            }
+        }
+        else
+        {
+            m_lowBatteryRecovering = false;
+            m_lowBatteryRecoveryStartedAt = 0;
+        }
+    }
+
+    return m_lowBatteryWarningActive;
 }
 
 void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
@@ -176,11 +254,41 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
         m_engineStartBlinkStartedAt = 0;
     m_lastArmedState = armed;
 
+    char steeringText[16];
+    char gasText[16];
+    char rssiText[10];
+    char lqText[12];
+    char batteryText[12];
+    uint16_t voltageCentivolts = 0;
+    const bool voltageValid = Vbat_getVoltage(voltageCentivolts);
+    uint16_t displayedCentivolts = voltageCentivolts;
+    batteryText[0] = OSD_BATTERY;
+    if (voltageValid && voltageCentivolts > 0)
+    {
+        const uint8_t cellCount = config.GetRoverCellCount();
+        displayedCentivolts = cellCount == 0
+            ? voltageCentivolts
+            : (voltageCentivolts + cellCount / 2U) / cellCount;
+        snprintf(batteryText + 1, sizeof(batteryText) - 1, " %u.%02uV",
+                 static_cast<unsigned>(displayedCentivolts / 100U),
+                 static_cast<unsigned>(displayedCentivolts % 100U));
+    }
+    else
+    {
+        strncpy(batteryText + 1, " -V", sizeof(batteryText) - 1);
+        batteryText[sizeof(batteryText) - 1] = '\0';
+    }
+    const bool lowBatteryWarning = updateLowBatteryWarning(now, voltageValid, displayedCentivolts);
     const char *stateText = nullptr;
     if (failsafe)
     {
         if ((now / FAILSAFE_BLINK_INTERVAL_MS) % 2 == 0)
             stateText = "FAILSAFE";
+    }
+    else if (lowBatteryWarning)
+    {
+        if ((now / LOW_BATTERY_BLINK_INTERVAL_MS) % 2 == 0)
+            stateText = "RETURN NOW";
     }
     else if (!armed)
     {
@@ -194,28 +302,6 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
         {
             stateText = "ENGINE START";
         }
-    }
-
-    char steeringText[16];
-    char gasText[16];
-    char rssiText[10];
-    char lqText[12];
-    char batteryText[12];
-    uint16_t voltageCentivolts;
-    const bool voltageValid = Vbat_getVoltage(voltageCentivolts);
-    batteryText[0] = OSD_BATTERY;
-    if (voltageValid && voltageCentivolts > 0)
-    {
-        const uint8_t cellCount = config.GetRoverCellCount();
-        const uint16_t cellCentivolts = (voltageCentivolts + cellCount / 2U) / cellCount;
-        snprintf(batteryText + 1, sizeof(batteryText) - 1, " %u.%02uV",
-                 static_cast<unsigned>(cellCentivolts / 100U),
-                 static_cast<unsigned>(cellCentivolts % 100U));
-    }
-    else
-    {
-        strncpy(batteryText + 1, " -V", sizeof(batteryText) - 1);
-        batteryText[sizeof(batteryText) - 1] = '\0';
     }
     const uint8_t rssiMagnitude = linkStats.active_antenna != 0 && linkStats.uplink_RSSI_2 != 0
         ? linkStats.uplink_RSSI_2

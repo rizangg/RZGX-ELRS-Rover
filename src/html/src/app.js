@@ -58,7 +58,7 @@ export class App extends LitElement {
                             <li><a id="menu-connections" href="#connections"><span class="mui--align-middle icon--symbols icon--symbols--connections"></span>Connections</a></li>
                             ` : ''}
                             <li><a id="menu-serial" href="#serial"><span class="mui--align-middle icon--symbols icon--symbols--serial"></span>Serial</a></li>
-                            <li><a id="menu-rover-osd" href="#rover-osd"><span class="mui--align-middle icon--symbols icon--symbols--options"></span>Rover OSD</a></li>
+                            <li><a id="menu-rover-osd" href="#rover-osd"><span class="mui--align-middle icon--symbols icon--symbols--rover-osd"></span>Rover OSD</a></li>
                             <!-- /FEATURE:NOT IS_TX -->
                             <li><a id="menu-wifi" href="#wifi"><span class="mui--align-middle icon--symbols icon--symbols--wifi"></span>WiFi</a></li>
                             <li><a id="menu-update" href="#update"><span class="mui--align-middle icon--symbols icon--symbols--update"></span>Update</a></li>

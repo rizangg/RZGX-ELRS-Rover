@@ -1,5 +1,55 @@
 # Test Log
 
+## RadioMaster ER5C V2 / MVP 0.5I
+
+Validation period ending `2026-08-09`.
+
+Test setup:
+
+- RadioMaster ER5C V2 receiver running RZGX `4.0.1.5I`
+- RadioMaster MT12 with internal 2.4GHz ELRS transmitter
+- Dynamic Power enabled with a `250 mW` maximum
+- DJI Air Unit with MSP DisplayPort OSD
+- Calibrated receiver analog VBAT sensing
+- LiPo 2S and LiPo 4S packs
+
+Test duration and conditions:
+
+- More than five vehicle runs over approximately one week
+- Individual runs between approximately 5 and 15 minutes
+- Obstructed outdoor operation out to approximately 150 m
+- Repeated operation around trees, benches, sidewalks, and buildings
+
+Results:
+
+- Voltage Mode behaved as designed in RX, 2S, and 4S configurations.
+- Custom Rover OSD showed filtered average-per-cell voltage for cell-count
+  modes, while the native DJI battery field showed whole-pack voltage.
+- The optional low-battery warning, threshold, delay, recovery behavior, and
+  WebUI persistence behaved as designed.
+- `FAILSAFE` remained the highest-priority OSD notification when warning states
+  overlapped.
+- Arming, PWM steering/throttle control, UART DisplayPort, Wi-Fi configuration,
+  and failsafe neutral positions retained the validated 0.5H behavior.
+- No event triggered failsafe and no performance failure was observed during
+  the recorded runs.
+- Link quality remained stable at the farthest observed distance.
+
+Telemetry observations:
+
+- Telemetry Lost / Telemetry Recovered occurred above approximately 100 m with
+  physical obstructions. A companion vehicle using original ExpressLRS 3.3.1
+  also produced the notification under the same conditions.
+- Repeated Telemetry Lost / Telemetry Recovered was observed at approximately
+  50 m behind the transmitter with physical obstructions, while the companion
+  receiver did not reproduce it there.
+- These telemetry notifications did not produce failsafe or a control-quality
+  anomaly. They remain a field observation, not proof of a firmware cause.
+
+Based on these repeated physical tests, the exact ER5C V2 0.5I artifact is
+promoted as Stable 04. ER5A V2 target compatibility and BETAFPV 0.5I behavior
+remain outside this stable hardware claim.
+
 ## RadioMaster ER5C V2 / MVP 0.5H
 
 Test dates: `2026-08-01` and `2026-08-02`

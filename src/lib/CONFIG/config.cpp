@@ -852,6 +852,8 @@ void RxConfig::Load()
             UpgradeEepromV11(); break;
         case 12:
             UpgradeEepromV12(); break;
+        case 13:
+            UpgradeEepromV13(); break;
     }
     m_modified = EVENT_CONFIG_MODEL_CHANGED; // anything to force write
     Commit();
@@ -1119,6 +1121,23 @@ void RxConfig::UpgradeEepromV12()
         m_config.pwmChannels[ch].raw = old.pwmChannels[ch].raw;
 }
 
+void RxConfig::UpgradeEepromV13()
+{
+    constexpr size_t v13PayloadSize = __builtin_offsetof(v13_rx_config_t, roverCellCount) + sizeof(uint8_t);
+    static_assert(__builtin_offsetof(rx_config_t, roverLowBatteryEnabled) == v13PayloadSize,
+                  "RX config V14 must append low-battery settings after the V13 payload bytes");
+    v13_rx_config_t old;
+    m_eeprom->Get(0, old);
+
+    // v13_rx_config_t has tail padding because pwmChannels is 4-byte aligned.
+    // Copy only the real V13 payload so that padding cannot overwrite V14 fields.
+    memcpy(&m_config, &old, v13PayloadSize);
+    m_config.version = RX_CONFIG_VERSION | RX_CONFIG_MAGIC;
+    m_config.roverLowBatteryEnabled = 0;
+    m_config.roverLowBatteryThresholdCentivolts = 350;
+    m_config.roverLowBatteryDelayMs = 3000;
+}
+
 /**
  * @brief Upgrade UID and flash_discriminator from old config, using onLoanUid if != null
  */
@@ -1334,6 +1353,9 @@ RxConfig::SetDefaults(bool commit)
     strncpy(m_config.roverCraftName, "RZGX ROVER", sizeof(m_config.roverCraftName));
     m_config.roverCraftName[sizeof(m_config.roverCraftName) - 1] = '\0';
     m_config.roverCellCount = 2;
+    m_config.roverLowBatteryEnabled = 0;
+    m_config.roverLowBatteryThresholdCentivolts = 350;
+    m_config.roverLowBatteryDelayMs = 3000;
 
     if (commit)
     {
@@ -1518,10 +1540,68 @@ void RxConfig::SetRoverCraftName(const char *name)
 
 void RxConfig::SetRoverCellCount(uint8_t cellCount)
 {
-    const uint8_t value = constrain(cellCount, 1, 8);
+    const uint8_t value = constrain(cellCount, 0, 8);
     if (m_config.roverCellCount != value)
     {
         m_config.roverCellCount = value;
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+    if (value == 0)
+        SetRoverLowBatteryEnabled(false);
+}
+
+uint16_t RxConfig::GetRoverLowBatteryThresholdCentivolts() const
+{
+    const uint16_t value = m_config.roverLowBatteryThresholdCentivolts;
+    return value >= 250 && value <= 450 ? value : 350;
+}
+
+static uint16_t normalizeRoverLowBatteryDelay(uint16_t delayMs)
+{
+    switch (delayMs)
+    {
+        case 0:
+        case 1000:
+        case 3000:
+        case 5000:
+        case 10000:
+            return delayMs;
+        default:
+            return 3000;
+    }
+}
+
+uint16_t RxConfig::GetRoverLowBatteryDelayMs() const
+{
+    return normalizeRoverLowBatteryDelay(m_config.roverLowBatteryDelayMs);
+}
+
+void RxConfig::SetRoverLowBatteryEnabled(bool enabled)
+{
+    const uint8_t value = enabled && GetRoverCellCount() != 0 ? 1 : 0;
+    if (m_config.roverLowBatteryEnabled != value)
+    {
+        m_config.roverLowBatteryEnabled = value;
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+}
+
+void RxConfig::SetRoverLowBatteryThresholdCentivolts(uint16_t thresholdCentivolts)
+{
+    const uint16_t value = constrain(thresholdCentivolts, 250, 450);
+    if (m_config.roverLowBatteryThresholdCentivolts != value)
+    {
+        m_config.roverLowBatteryThresholdCentivolts = value;
+        m_modified = EVENT_CONFIG_MODEL_CHANGED;
+    }
+}
+
+void RxConfig::SetRoverLowBatteryDelayMs(uint16_t delayMs)
+{
+    const uint16_t value = normalizeRoverLowBatteryDelay(delayMs);
+    if (m_config.roverLowBatteryDelayMs != value)
+    {
+        m_config.roverLowBatteryDelayMs = value;
         m_modified = EVENT_CONFIG_MODEL_CHANGED;
     }
 }

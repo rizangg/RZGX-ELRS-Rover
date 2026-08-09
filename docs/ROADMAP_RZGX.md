@@ -2,9 +2,9 @@
 
 ## Near Term
 
-- Implement the requirements recorded in [Next Patch Notes](NEXT_PATCH_NOTES.md)
-  without replacing the preserved 0.5H baseline or artifacts.
-- Preserve Stable 02 / MVP 0.5D for BETAFPV and Stable 03 / MVP 0.5H for the
+- Continue ER5C development without replacing the preserved 0.5H and 0.5I
+  source, documentation, or artifacts.
+- Preserve Stable 02 / MVP 0.5D for BETAFPV and Stable 04 / MVP 0.5I for the
   physically tested RadioMaster ER5C V2.
 - Avoid large OSD additions unless link stability remains proven.
 - Test more receiver samples of the same target.

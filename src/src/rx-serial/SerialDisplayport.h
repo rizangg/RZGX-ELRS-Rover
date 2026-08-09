@@ -46,7 +46,7 @@ struct msp_status_t
 class SerialDisplayport final : public SerialIO
 {
 public:
-    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0), m_lastOsdTransaction(0), m_lastBatteryTransaction(0), m_engineStartBlinkStartedAt(0), m_lastArmedState(false) {}
+    explicit SerialDisplayport(Stream &out, Stream &in) : SerialIO(&out, &in), m_receivedBytes(0), m_receivedTimestamp(0), m_lastOsdTransaction(0), m_lastBatteryTransaction(0), m_engineStartBlinkStartedAt(0), m_lowBatteryStartedAt(0), m_lowBatteryRecoveryStartedAt(0), m_lastArmedState(false), m_lowBatteryPending(false), m_lowBatteryRecovering(false), m_lowBatteryWarningActive(false) {}
     ~SerialDisplayport() override = default;
 
     void sendQueuedData(uint32_t) override {}
@@ -59,6 +59,8 @@ private:
     void sendDisplayPortString(uint8_t row, uint8_t col, const char *text);
     void sendBatteryTelemetry();
     void renderRoverOsd(bool armed, const uint32_t *channelData);
+    bool updateLowBatteryWarning(uint32_t now, bool voltageValid, uint16_t displayedCentivolts);
+    void resetLowBatteryWarning();
     bool getArmedState();
 
     uint8_t m_receivedBytes;
@@ -66,7 +68,12 @@ private:
     uint32_t m_lastOsdTransaction;
     uint32_t m_lastBatteryTransaction;
     uint32_t m_engineStartBlinkStartedAt;
+    uint32_t m_lowBatteryStartedAt;
+    uint32_t m_lowBatteryRecoveryStartedAt;
     bool m_lastArmedState;
+    bool m_lowBatteryPending;
+    bool m_lowBatteryRecovering;
+    bool m_lowBatteryWarningActive;
 };
 
 #endif // defined(TARGET_RX)

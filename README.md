@@ -12,7 +12,7 @@ Betaflight, INAV, or any external FC.
 > Current stable releases:
 >
 > - **Stable 02 / MVP 0.5D** - BETAFPV PWM 2.4GHz RX
-> - **Stable 03 / MVP 0.5H** - RadioMaster ER5C V2
+> - **Stable 04 / MVP 0.5I** - RadioMaster ER5C V2
 >
 > ExpressLRS base: **4.0.1**
 
@@ -52,6 +52,23 @@ crossed the same area without that notification and kept LQ above 90 percent.
 These are field observations, not a controlled range specification. Flash only
 the ER5A/C V2 artifact to that exact receiver target.
 
+### Stable 04 / MVP 0.5I - RadioMaster ER5C V2
+
+MVP **0.5I** is the current stable build for the physically tested
+**RadioMaster ER5C V2**. It adds selectable voltage interpretation and an
+optional low-battery warning while preserving the validated 0.5H control,
+failsafe, UART, Wi-Fi, and OSD behavior.
+
+- Target: **RadioMaster ER5A/C V2 2.4GHz PWM RX**
+- Binary: [`RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
+- SHA256: [`SHA256SUMS-STABLE-04-ER5C-0.5I.txt`](work/builds/SHA256SUMS-STABLE-04-ER5C-0.5I.txt)
+- Release notes: [`Stable 04 / RadioMaster ER5C V2 / MVP 0.5I`](docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md)
+- Test record: [`ER5C V2 MVP 0.5I field validation`](docs/TEST_LOG.md#radiomaster-er5c-v2--mvp-05i)
+
+Only the ER5C V2 build is promoted as Stable 04. ER5A V2 shares the official
+target identity but remains physically untested by this project, and the
+BETAFPV 0.5I build is not promoted as stable.
+
 ## What It Does
 
 The receiver continues to provide PWM outputs for vehicle control, while the
@@ -62,6 +79,9 @@ Current MVP OSD:
 - Craft Name
 - STANDBY state
 - ENGINE START arming transition
+- FAILSAFE notification
+- Battery voltage
+- Optional low-battery RETURN NOW warning
 - Steering percentage
 - Gas percentage
 - RSSI value
@@ -237,6 +257,7 @@ See:
 - [STABLE-BASELINE.md](STABLE-BASELINE.md)
 - [docs/releases/STABLE-02-MVP-0.5D.md](docs/releases/STABLE-02-MVP-0.5D.md)
 - [docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md](docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md)
+- [docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md](docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md)
 
 Stable 02 / MVP 0.5D was selected after repeated indoor and outdoor tests where:
 
@@ -250,6 +271,11 @@ Stable 03 / MVP 0.5H promotes the exact ER5C V2 binary that passed repeated
 vehicle tests, failsafe checks, battery-telemetry validation, and a continuous
 15-minute stock-antenna follow-up run. The ER5A V2 compatibility statement
 remains target-based until that hardware is tested separately.
+
+Stable 04 / MVP 0.5I promotes the exact ER5C V2 binary that passed more than
+five additional 5-15 minute vehicle runs, 2S and 4S voltage-mode checks,
+low-battery warning checks, and obstructed field operation out to approximately
+150 m. FAILSAFE remained the highest-priority OSD notification.
 
 ## Relationship to ExpressLRS Upstream
 

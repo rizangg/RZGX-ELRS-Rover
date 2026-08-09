@@ -1,17 +1,27 @@
-# Current Stable Baseline
+# Current Stable Baselines
 
-The current stable baseline is **Stable 02 / MVP 0.5D**.
+Stable status is receiver-target specific. It does not imply that one binary is
+safe for every ExpressLRS receiver.
 
-- Target: `BETAFPV PWM 2.4GHz RX`
+## BETAFPV PWM 2.4GHz RX
+
+- Stable release: **Stable 02 / MVP 0.5D**
 - ExpressLRS base: `4.0.1`
 - RZGX build label: `4.0.1.5D`
-- Upstream source commit: `b5a5b5fdbed0d8420d0b4f5a3c55f380557def74`
 - Stable binary: [`work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5D-BETAFPV-PWM-2G4RX.bin.gz)
 - Stable notes: [`docs/releases/STABLE-02-MVP-0.5D.md`](docs/releases/STABLE-02-MVP-0.5D.md)
 
-This is a field-validated development baseline for the RZGX rover use case, not
-an upstream ExpressLRS production release.
+## RadioMaster ER5C V2
 
-Validation note: this baseline has been field-tested on two receivers of the
-same target type. It should be treated as stable for the tested hardware, not as
-a generic all-receiver ExpressLRS release.
+- Stable release: **Stable 04 / MVP 0.5I**
+- ExpressLRS base: `4.0.1`
+- RZGX build label: `4.0.1.5I`
+- Stable binary: [`work/builds/RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
+- Stable notes: [`docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md`](docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md)
+
+ER5A V2 shares the official ER5A/C V2 target identity but has not been
+physically tested by this project. The ER5C stable designation therefore does
+not extend to ER5A solely from target compatibility.
+
+These are field-validated development baselines for the RZGX rover use case,
+not upstream ExpressLRS production releases.
