@@ -28,8 +28,10 @@ jobs:
         id: validate
         run: |
           cd src/html
-          diff -qr out headers >/dev/null 2>&1
+          set +e
+          diff -qr out headers
           exit_code=$?
+          set -e
           if [ "$exit_code" -eq 0 ]; then
             echo "Artifact check passed."
             exit 0
@@ -40,6 +42,14 @@ jobs:
             echo "⚠️ **Artifact Check Error:** An unexpected error ($exit_code) occurred during file comparison. Check the workflow logs."
             exit 2 # Fail the step
           fi
+
+      - name: Upload generated Web UI headers on mismatch
+        if: failure() && steps.validate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-webui-headers-${{ github.sha }}
+          path: src/html/headers
+          retention-days: 1
 
   test:
     runs-on: ubuntu-latest
