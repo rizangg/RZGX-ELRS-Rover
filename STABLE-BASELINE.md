@@ -13,11 +13,11 @@ safe for every ExpressLRS receiver.
 
 ## RadioMaster ER5C V2
 
-- Stable release: **Stable 04 / MVP 0.5I**
+- Stable release: **Stable 05 / MVP 0.5K**
 - ExpressLRS base: `4.0.1`
-- RZGX build label: `4.0.1.5I`
-- Stable binary: [`work/builds/RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
-- Stable notes: [`docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md`](docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md)
+- RZGX build label: `4.0.1.5K`
+- Stable binary: [`work/builds/RZGX-Rover-ELRS-MVP-0.5K-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5K-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
+- Stable notes: [`docs/releases/STABLE-05-ER5C-V2-MVP-0.5K.md`](docs/releases/STABLE-05-ER5C-V2-MVP-0.5K.md)
 
 ER5A V2 shares the official ER5A/C V2 target identity but has not been
 physically tested by this project. The ER5C stable designation therefore does

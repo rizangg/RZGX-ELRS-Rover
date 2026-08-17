@@ -1,9 +1,27 @@
-# Next Patch Notes - Experimental 0.5J
+# Next Patch Notes - After Stable 05 / MVP 0.5K
 
-This document records the agreed scope for the ER5C-only 0.5J test build.
-Stable 04 / MVP 0.5I remains the current stable ER5C release until the new
-behavior has completed physical testing. The preserved 0.5H and 0.5I source,
-documentation, and firmware artifacts must not be replaced.
+Stable 05 / MVP 0.5K is the current stable ER5C release. Any next patch must
+remain a new experimental version and must not replace the preserved 0.5H,
+0.5I, 0.5J, or 0.5K source, documentation, and firmware artifacts.
+
+## Candidate: Transmit Power OSD
+
+The receiver already receives the transmitter's current selected power level
+as `linkStats.uplink_TX_Power`. A future Rover OSD item can convert that CRSF
+power enum to `10`, `25`, `50`, `100`, `250`, `500`, `1000`, or `2000 mW`.
+
+- Label the value as current selected TX power, not measured RF output.
+- Show an unavailable placeholder until the first valid power sample arrives.
+- Do not present a stale value as current during failsafe; blank it, replace it
+  with a placeholder, or include it in the failsafe blink behavior.
+- Preserve the existing safety-notification priority and keep the field compact.
+- Verify update latency in the ELRS switch modes that transmit power in a
+  round-robin slot, especially with Dynamic Power enabled.
+
+## Implemented 0.5J/0.5K Design Record
+
+The sections below preserve the design that began in experimental 0.5J and was
+completed by the failsafe reconnect correction in 0.5K.
 
 ## WebUI
 
@@ -45,7 +63,7 @@ Notification priority is:
 
 ## Validation Required
 
-Before 0.5J can replace Stable 04 / 0.5I:
+The following checks were used before 0.5K replaced Stable 04 / 0.5I:
 
 - verify no CH2 output while disarmed and no premature output immediately after
   arming;
@@ -56,6 +74,6 @@ Before 0.5J can replace Stable 04 / 0.5I:
   visually aligned;
 - repeat indoor and obstructed outdoor link tests on the physical ER5C V2.
 
-Known audit item: if failsafe clears after the neutral latch was already open,
-the present design may resume gas output from the live transmitter value. This
-must be explicitly exercised during physical testing before promotion.
+Resolved in 0.5K: entering failsafe closes the neutral latch. Reconnection with
+forward GAS held was exercised repeatedly; CH2 remained blocked and displayed
+`GAS TO CENTER` until the input returned to neutral.

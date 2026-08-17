@@ -20,7 +20,7 @@ Only flash firmware built for the exact receiver target:
 | Tested receiver | Required firmware identity | Current stable build |
 | --- | --- | --- |
 | BETAFPV PWM 2.4GHz RX | `BETAFPV PWM 2.4GHz RX` | Stable 02 / MVP 0.5D |
-| RadioMaster ER5C V2 | `RadioMaster ER5A/C V2 2.4GHz PWM RX` | Stable 04 / MVP 0.5I |
+| RadioMaster ER5C V2 | `RadioMaster ER5A/C V2 2.4GHz PWM RX` | Stable 05 / MVP 0.5K |
 
 ER5A V2 shares the ER5A/C V2 firmware identity but has not been physically
 validated by this project.
@@ -86,9 +86,24 @@ For the tested BETAFPV and ER5C setups:
 Then set the serial protocol to DisplayPort/MSP DisplayPort and enable Rover
 OSD.
 
-## ER5C Stable 04 Voltage Configuration
+## ER5C Stable 05 Control Safety
 
-The ER5C V2 Stable 04 WebUI provides these `Voltage Mode` choices:
+Stable 05 gates logical CH2 GAS output on the ER5A/C V2 target:
+
+- while disarmed, GAS movement remains visible in the OSD but no active GAS
+  pulse is sent to the ESC;
+- after arming or recovering from failsafe, GAS must enter the `1450-1550 us`
+  neutral window before output is enabled;
+- `START FIRST` and `GAS TO CENTER` identify why output is blocked.
+
+The configured failsafe still determines the actual PWM positions while the
+link is lost. Before driving, confirm the output mapped to logical CH2 uses
+`Set Position` at the ESC's verified neutral value and confirm steering also
+uses its verified neutral failsafe position.
+
+## ER5C Stable 05 Voltage Configuration
+
+The ER5C V2 Stable 05 WebUI provides these `Voltage Sensing Mode` choices:
 
 | Mode | Physical sensing lead | Custom Rover OSD | Native DJI battery field |
 | --- | --- | --- | --- |

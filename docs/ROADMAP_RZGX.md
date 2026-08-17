@@ -2,11 +2,12 @@
 
 ## Near Term
 
-- Continue ER5C development without replacing the preserved 0.5H and 0.5I
+- Continue ER5C development without replacing the preserved 0.5H, 0.5I, 0.5J,
+  and 0.5K
   source, documentation, or artifacts.
-- Validate the ER5C-only 0.5J scope in [Next Patch Notes](NEXT_PATCH_NOTES.md)
-  without describing it as stable before physical testing.
-- Preserve Stable 02 / MVP 0.5D for BETAFPV and Stable 04 / MVP 0.5I for the
+- Evaluate the transmit-power OSD candidate in
+  [Next Patch Notes](NEXT_PATCH_NOTES.md) without changing Stable 05.
+- Preserve Stable 02 / MVP 0.5D for BETAFPV and Stable 05 / MVP 0.5K for the
   physically tested RadioMaster ER5C V2.
 - Avoid large OSD additions unless link stability remains proven.
 - Test more receiver samples of the same target.

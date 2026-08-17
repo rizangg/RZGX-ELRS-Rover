@@ -1,7 +1,7 @@
 # RadioMaster ER5C V2 VBAT Sense Wiring
 
 This note documents the field-tested voltage-sense arrangement used with the
-RadioMaster ER5C V2 and RZGX Rover ELRS 0.5H and 0.5I. RadioMaster specifies automatic
+RadioMaster ER5C V2 and RZGX Rover ELRS 0.5H, 0.5I, and 0.5K. RadioMaster specifies automatic
 selection between external battery voltage and receiver/ESC-BEC voltage, with
 an external telemetry detection range of `4.0-35 V`.
 
@@ -30,14 +30,14 @@ This makes source selection simple in the tested installation: the same
 positive sense lead can be moved between the two external batteries, or left
 disconnected to monitor the receiver supply.
 
-## Stable 04 / MVP 0.5I Voltage Mode
+## Stable 05 / MVP 0.5K Voltage Sensing Mode
 
 | WebUI mode | Required physical arrangement | Display behavior |
 | --- | --- | --- |
 | `RX` | Leave the external sensing lead disconnected | Receiver/BEC voltage is shown unchanged in both OSD fields |
 | `1S`-`8S` | Connect to verified whole-pack positive and select the actual series cell count | Native DJI shows whole pack; Rover OSD shows average per cell |
 
-Voltage Mode does not electrically switch the source. Moving or disconnecting
+Voltage Sensing Mode does not electrically switch the source. Moving or disconnecting
 the sensing lead remains a physical user action. Selecting `RX` automatically
 disables the low-battery warning. In `1S`-`8S` modes, the optional warning uses
 the displayed average-per-cell voltage, configured threshold, and delay.

@@ -1,5 +1,80 @@
 # Test Log
 
+## RadioMaster ER5C V2 / MVP 0.5K
+
+Validation period ending `2026-08-17`.
+
+Test setup:
+
+- RadioMaster ER5C V2 receiver running RZGX `4.0.1.5K`
+- RadioMaster MT12 with internal 2.4 GHz ELRS transmitter
+- Dynamic Power enabled with a `250 mW` maximum
+- Integrated MT12 antenna rotated upright, perpendicular to the transmitter's
+  top face
+- DJI O3 Air Unit with MSP DisplayPort OSD
+- Calibrated receiver analog VBAT sensing
+
+Test duration and conditions:
+
+- Multiple outdoor validation runs, including one longer than 17 minutes
+- Final continuous outdoor run longer than 20 minutes
+- Operation out to approximately 300 m with typical city-park obstructions
+- Trees, walls, parked vehicles, and non-ideal positioning rather than a clean
+  front-facing line of sight
+
+Functional results:
+
+- The disarmed CH2 gate blocked ESC output while GAS movement remained visible
+  and `START FIRST` behaved as designed.
+- Arming with non-neutral GAS displayed `GAS TO CENTER` and kept CH2 blocked
+  until the input entered the neutral window.
+- Repeated intentional failsafe tests with forward GAS held stopped the
+  vehicle. After transmitter reconnection, CH2 remained blocked and displayed
+  `GAS TO CENTER` until GAS returned to neutral.
+- `FAILSAFE` blinked with RSSI/LQ, `START FIRST` and `GAS TO CENTER` blinked with
+  GAS, and `RETURN NOW` blinked with battery voltage.
+- Notification priority behaved as designed when warning states overlapped.
+- Voltage Sensing Mode was physically checked in RX, 2S, 3S, and 4S modes.
+- Native DJI displayed whole-pack voltage and Rover OSD displayed the intended
+  receiver or average-per-cell voltage.
+- Low-battery delay and Drive Timer behavior were confirmed.
+- No unintended failsafe, control anomaly, or performance failure occurred.
+
+Link observations:
+
+- One or two Telemetry Lost / Telemetry Recovered notifications occurred in
+  the final test without failsafe or a control-quality anomaly.
+- This was substantially less frequent than earlier observations, despite the
+  longer route and heavier obstruction. Antenna orientation may have
+  contributed, but no controlled A/B comparison was performed.
+- The DJI video link became unusable before the ELRS control link in the final
+  route while observed ELRS LQ remained `99-100%`.
+- These are installation-specific field observations, not calibrated range or
+  RF-performance specifications.
+
+Uncovered physical samples:
+
+- Held reverse GAS reconnect was not intentionally sampled; held forward GAS
+  reconnect was repeated successfully.
+- The invalid-voltage fallback was not deliberately triggered.
+- Physical battery testing covered RX, 2S, 3S, and 4S, not every 5S-8S option.
+
+Field evidence:
+
+- [Approximately 300 m with physical obstructions](assets/er5c-5k/field-test-300m-obstructed.png)
+- [Intentional failsafe](assets/er5c-5k/osd-intentional-failsafe.png)
+- [GAS TO CENTER after reconnect](assets/er5c-5k/osd-gas-to-center.png)
+- [RETURN NOW warning](assets/er5c-5k/osd-return-now.png)
+- [Firmware Information with Binding UID redacted](assets/er5c-5k/webui-firmware-information-redacted.jpg)
+- [PWM and serial routing](assets/er5c-5k/webui-pwm-serial-routing.jpg)
+- [DisplayPort serial selection](assets/er5c-5k/webui-displayport-serial.jpg)
+- [Voltage sensing and warning settings](assets/er5c-5k/webui-voltage-sensing.jpg)
+- [Rover OSD source summary](assets/er5c-5k/webui-rover-osd-sources.jpg)
+
+Based on this validation, the exact ER5C V2 0.5K artifact is promoted as
+Stable 05. ER5A V2 remains target-compatible but physically untested, and no
+BETAFPV 0.5K artifact is produced.
+
 ## RadioMaster ER5C V2 / MVP 0.5I
 
 Validation period ending `2026-08-09`.

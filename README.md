@@ -12,7 +12,7 @@ Betaflight, INAV, or any external FC.
 > Current stable releases:
 >
 > - **Stable 02 / MVP 0.5D** - BETAFPV PWM 2.4GHz RX
-> - **Stable 04 / MVP 0.5I** - RadioMaster ER5C V2
+> - **Stable 05 / MVP 0.5K** - RadioMaster ER5C V2
 >
 > ExpressLRS base: **4.0.1**
 
@@ -56,9 +56,9 @@ crossed the same area without that notification and kept LQ above 90 percent.
 These are field observations, not a controlled range specification. Flash only
 the ER5A/C V2 artifact to that exact receiver target.
 
-### Stable 04 / MVP 0.5I - RadioMaster ER5C V2
+### Previous Stable 04 / MVP 0.5I - RadioMaster ER5C V2
 
-MVP **0.5I** is the current stable build for the physically tested
+MVP **0.5I** is a preserved stable build for the physically tested
 **RadioMaster ER5C V2**. It adds selectable voltage interpretation and an
 optional low-battery warning while preserving the validated 0.5H control,
 failsafe, UART, Wi-Fi, and OSD behavior.
@@ -73,9 +73,32 @@ Only the ER5C V2 build is promoted as Stable 04. ER5A V2 shares the official
 target identity but remains physically untested by this project, and the
 BETAFPV 0.5I build is not promoted as stable.
 
+### Stable 05 / MVP 0.5K - RadioMaster ER5C V2
+
+MVP **0.5K** is the current stable build for the physically tested
+**RadioMaster ER5C V2**. It adds an ER5-only CH2 GAS safety gate, safe reconnect
+behavior, coordinated warning blinking, and a cumulative Drive Timer while
+preserving the voltage sensing and low-battery behavior validated in 0.5I.
+
+- Target: **RadioMaster ER5A/C V2 2.4GHz PWM RX**
+- Binary: [`RZGX-Rover-ELRS-MVP-0.5K-RADIOMASTER-ER5A-ER5C-V2.bin.gz`](work/builds/RZGX-Rover-ELRS-MVP-0.5K-RADIOMASTER-ER5A-ER5C-V2.bin.gz)
+- SHA256: [`SHA256SUMS-STABLE-05-ER5C-0.5K.txt`](work/builds/SHA256SUMS-STABLE-05-ER5C-0.5K.txt)
+- Release notes: [`Stable 05 / RadioMaster ER5C V2 / MVP 0.5K`](docs/releases/STABLE-05-ER5C-V2-MVP-0.5K.md)
+- Test record: [`ER5C V2 MVP 0.5K field validation`](docs/TEST_LOG.md#radiomaster-er5c-v2--mvp-05k)
+
+Only the ER5C V2 build is promoted as Stable 05. ER5A V2 shares the official
+target identity but remains physically untested by this project. No BETAFPV
+0.5K artifact is produced.
+
+| Intentional failsafe | GAS TO CENTER after reconnect |
+| --- | --- |
+| ![ER5C 0.5K intentional failsafe](docs/assets/er5c-5k/osd-intentional-failsafe.png) | ![ER5C 0.5K GAS TO CENTER after reconnect](docs/assets/er5c-5k/osd-gas-to-center.png) |
+| RETURN NOW low-battery warning | Approximately 300 m with physical obstructions |
+| ![ER5C 0.5K RETURN NOW warning](docs/assets/er5c-5k/osd-return-now.png) | ![ER5C 0.5K field test at approximately 300 meters](docs/assets/er5c-5k/field-test-300m-obstructed.png) |
+
 ### Stable Capability Matrix
 
-| Capability | BETAFPV Stable 02 / 0.5D | ER5C Stable 04 / 0.5I |
+| Capability | BETAFPV Stable 02 / 0.5D | ER5C Stable 05 / 0.5K |
 | --- | --- | --- |
 | PWM steering and gas | Yes | Yes |
 | DJI MSP DisplayPort | Yes | Yes |
@@ -84,6 +107,9 @@ BETAFPV 0.5I build is not promoted as stable.
 | RX or 1S-8S voltage interpretation | No | Yes |
 | Native DJI whole-pack voltage | No | Yes |
 | Optional low-battery `RETURN NOW` warning | No | Yes |
+| Disarmed CH2 GAS output gate | No | Yes |
+| Neutral-before-output and failsafe reconnect gate | No | Yes |
+| Cumulative Drive Timer | No | Yes |
 
 ## What It Does
 
@@ -130,15 +156,19 @@ The same firmware was tested on two receivers of the same target type. Both
 receivers were able to use their own Craft Name and Binding Phrase through the
 receiver WiFi Configurator.
 
-Stable 04 / MVP 0.5I has additionally been field-tested on:
+Stable 05 / MVP 0.5K has additionally been field-tested on:
 
 - RadioMaster ER5C V2
 - RadioMaster MT12 with internal 2.4GHz ELRS transmitter
-- Dynamic Power enabled with a 250mW maximum
+- Dynamic Power enabled with a `250 mW` maximum
+- Integrated MT12 antenna rotated upright, perpendicular to the transmitter's
+  top face
 - DJI Air Unit with MSP DisplayPort OSD
-- Calibrated ER5C analog VBAT sensing with LiPo 2S and 4S packs
-- More than five runs of approximately 5-15 minutes, including obstructed
-  operation out to approximately 150 m
+- Calibrated ER5C analog VBAT sensing in RX, 2S, 3S, and 4S modes
+- Repeated safety-gate, intentional-failsafe, and held-forward-GAS reconnect
+  tests
+- A final continuous run longer than 20 minutes, including physically
+  obstructed operation out to approximately 300 m
 
 ## Field Test Gallery
 
@@ -286,6 +316,7 @@ See:
 - [docs/releases/STABLE-02-MVP-0.5D.md](docs/releases/STABLE-02-MVP-0.5D.md)
 - [docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md](docs/releases/STABLE-03-ER5C-V2-MVP-0.5H.md)
 - [docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md](docs/releases/STABLE-04-ER5C-V2-MVP-0.5I.md)
+- [docs/releases/STABLE-05-ER5C-V2-MVP-0.5K.md](docs/releases/STABLE-05-ER5C-V2-MVP-0.5K.md)
 
 Stable 02 / MVP 0.5D was selected after repeated indoor and outdoor tests where:
 
@@ -304,6 +335,12 @@ Stable 04 / MVP 0.5I promotes the exact ER5C V2 binary that passed more than
 five additional 5-15 minute vehicle runs, 2S and 4S voltage-mode checks,
 low-battery warning checks, and obstructed field operation out to approximately
 150 m. FAILSAFE remained the highest-priority OSD notification.
+
+Stable 05 / MVP 0.5K promotes the exact ER5C V2 binary that passed repeated
+CH2 safety-gate and held-forward-GAS reconnect tests, RX/2S/3S/4S voltage
+checks, coordinated warning-blink checks, and a final continuous run longer
+than 20 minutes with physically obstructed operation out to approximately
+300 m. No unintended failsafe or control anomaly was observed.
 
 ## Relationship to ExpressLRS Upstream
 

@@ -18,16 +18,21 @@ MANIFESTS = (
     BUILDS / "SHA256SUMS-STABLE-02-BETAFPV-0.5D.txt",
     BUILDS / "SHA256SUMS-0.5H.txt",
     BUILDS / "SHA256SUMS-STABLE-04-ER5C-0.5I.txt",
+    BUILDS / "SHA256SUMS-STABLE-05-ER5C-0.5K.txt",
 )
 
-ER5_BIN = BUILDS / "RZGX-Rover-ELRS-MVP-0.5I-RADIOMASTER-ER5A-ER5C-V2.bin"
+ER5_BIN = BUILDS / "RZGX-Rover-ELRS-MVP-0.5K-RADIOMASTER-ER5A-ER5C-V2.bin"
 ER5_GZ = ER5_BIN.with_suffix(".bin.gz")
 ER5_PRODUCT = b"RadioMaster ER5A/C V2 2.4GHz PWM RX"
 ER5_LUA = b"RM ER5A/C V2"
-FORBIDDEN_5I_MARKERS = (
-    b"4.0.1.5J",
+REQUIRED_5K_MARKERS = (
     b"START FIRST",
     b"GAS TO CENTER",
+    b"RETURN NOW",
+)
+FORBIDDEN_5K_MARKERS = (
+    b"4.0.1.5I",
+    b"4.0.1.5J",
     b"BETAFPV PWM 2.4GHz RX",
     b"BFPV PWM 2G4RX",
     b"DIY_2400_RX_PWMP",
@@ -58,7 +63,7 @@ def validate_manifests() -> None:
 
 
 def validate_gzip_pairs() -> None:
-    for version in ("0.5H", "0.5I"):
+    for version in ("0.5H", "0.5I", "0.5K"):
         binary = BUILDS / f"RZGX-Rover-ELRS-MVP-{version}-RADIOMASTER-ER5A-ER5C-V2.bin"
         compressed = binary.with_suffix(".bin.gz")
         if gzip.decompress(compressed.read_bytes()) != binary.read_bytes():
@@ -67,24 +72,30 @@ def validate_gzip_pairs() -> None:
 
 def validate_source_and_binary_identity() -> None:
     version_header = ROOT / "src" / "include" / "rzgx_version.h"
-    if 'RZGX_ROVER_FIRMWARE_VERSION "4.0.1.5I"' not in version_header.read_text(encoding="utf-8"):
-        fail("source version marker is not 4.0.1.5I")
+    if 'RZGX_ROVER_FIRMWARE_VERSION "4.0.1.5K"' not in version_header.read_text(encoding="utf-8"):
+        fail("source version marker is not 4.0.1.5K")
 
     data = ER5_BIN.read_bytes()
-    if data.count(b"4.0.1.5I") != 1:
-        fail("Stable 04 binary must contain exactly one 4.0.1.5I marker")
-    if data.count(ER5_PRODUCT) != 1 or data.count(ER5_LUA) != 1:
-        fail("Stable 04 binary ER5 target identity is missing or duplicated")
-    for marker in FORBIDDEN_5I_MARKERS:
+    if data.count(b"4.0.1.5K") != 1:
+        fail("Stable 05 binary must contain exactly one 4.0.1.5K marker")
+    # The product string is present in both the firmware target metadata and the
+    # embedded WebUI in 0.5K. The compact Lua name remains a single metadata
+    # marker. Require presence rather than rejecting that intentional duplicate.
+    if ER5_PRODUCT not in data or data.count(ER5_LUA) != 1:
+        fail("Stable 05 binary ER5 target identity is missing or invalid")
+    for marker in REQUIRED_5K_MARKERS:
+        if data.count(marker) != 1:
+            fail(f"Stable 05 binary is missing or duplicates required marker: {marker!r}")
+    for marker in FORBIDDEN_5K_MARKERS:
         if marker in data:
-            fail(f"Stable 04 binary contains forbidden marker: {marker!r}")
+            fail(f"Stable 05 binary contains forbidden marker: {marker!r}")
 
 
 def validate_documentation_contract() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     flashing = (ROOT / "docs" / "FLASHING_AND_CONFIGURATION.md").read_text(encoding="utf-8")
-    if "Stable 04 / MVP 0.5I" not in readme:
-        fail("README does not identify Stable 04 / MVP 0.5I")
+    if "Stable 05 / MVP 0.5K" not in readme:
+        fail("README does not identify Stable 05 / MVP 0.5K")
     for target in ("BETAFPV PWM 2.4GHz RX", "RadioMaster ER5A/C V2 2.4GHz PWM RX"):
         if target not in flashing:
             fail(f"flashing guide is missing target: {target}")
@@ -125,7 +136,7 @@ def main() -> int:
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"FAIL {exc}", file=sys.stderr)
         return 1
-    print("RZGX Stable 04 validation passed")
+    print("RZGX Stable 05 validation passed")
     return 0
 
 
