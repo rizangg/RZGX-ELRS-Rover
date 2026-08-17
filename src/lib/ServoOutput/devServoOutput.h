@@ -14,5 +14,8 @@ extern device_t ServoOut_device;
 void servoNewChannelsAvailable();
 // Copy the current output values to the config's failsafe values
 void servoCurrentToFailsafeConfig();
+// ER5 rover safety gate state used by the OSD and PWM output path
+bool roverGasSafetyGateEnabled();
+bool roverGasSafetyGateSatisfied();
 
 #endif

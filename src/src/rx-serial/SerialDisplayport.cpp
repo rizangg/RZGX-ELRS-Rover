@@ -17,6 +17,7 @@ CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
 #include "SerialDisplayport.h"
 #include "CRSFRouter.h"
 #include "devAnalogVbat.h"
+#include "devServoOutput.h"
 #include "OTA.h"
 #include "config.h"
 #include "options.h"
@@ -30,11 +31,15 @@ static constexpr uint8_t OSD_COLUMNS = 53;
 static constexpr uint32_t OSD_UPDATE_INTERVAL_MS = 100;
 static constexpr uint8_t OSD_CENTER_ROW = 10;
 static constexpr uint32_t FAILSAFE_BLINK_INTERVAL_MS = 250;
+static constexpr uint32_t START_FIRST_BLINK_INTERVAL_MS = 250;
+static constexpr uint32_t GAS_TO_CENTER_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_INTERVAL_MS = 250;
 static constexpr uint32_t ENGINE_START_BLINK_DURATION_MS = 1500;
 static constexpr uint32_t LOW_BATTERY_BLINK_INTERVAL_MS = 500;
 static constexpr uint16_t LOW_BATTERY_HYSTERESIS_CENTIVOLTS = 10;
 static constexpr uint32_t LOW_BATTERY_RECOVERY_MS = 2000;
+static constexpr uint32_t DRIVE_TIMER_MAX_SECONDS = 99U * 60U + 59U;
+static constexpr uint32_t DRIVE_TIMER_MAX_MS = DRIVE_TIMER_MAX_SECONDS * 1000U;
 static constexpr char OSD_ARROW_DOWN = 0x60;
 static constexpr char OSD_ARROW_RIGHT = 0x64;
 static constexpr char OSD_ARROW_UP = 0x68;
@@ -237,6 +242,39 @@ bool SerialDisplayport::updateLowBatteryWarning(uint32_t now, bool voltageValid,
     return m_lowBatteryWarningActive;
 }
 
+void SerialDisplayport::updateDriveTimer(uint32_t now, bool armed)
+{
+    if (armed && !m_driveTimerRunning)
+    {
+        m_driveTimerRunning = true;
+        m_driveTimerArmedStartedAt = now;
+    }
+    else if (!armed && m_driveTimerRunning)
+    {
+        const uint32_t elapsed = now - m_driveTimerArmedStartedAt;
+        const uint32_t remaining = DRIVE_TIMER_MAX_MS - m_driveTimerAccumulatedMs;
+        m_driveTimerAccumulatedMs += min(elapsed, remaining);
+        m_driveTimerRunning = false;
+    }
+
+    uint32_t totalMs = m_driveTimerAccumulatedMs;
+    if (m_driveTimerRunning)
+    {
+        const uint32_t elapsed = now - m_driveTimerArmedStartedAt;
+        const uint32_t remaining = DRIVE_TIMER_MAX_MS - totalMs;
+        totalMs += min(elapsed, remaining);
+    }
+
+    const uint32_t totalSeconds = min(totalMs / 1000U, DRIVE_TIMER_MAX_SECONDS);
+    if (totalSeconds != m_driveTimerCachedSeconds)
+    {
+        m_driveTimerCachedSeconds = totalSeconds;
+        snprintf(m_driveTimerText, sizeof(m_driveTimerText), "%02u:%02u",
+                 static_cast<unsigned>(totalSeconds / 60U),
+                 static_cast<unsigned>(totalSeconds % 60U));
+    }
+}
+
 void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
 {
     const uint32_t now = millis();
@@ -248,11 +286,14 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
     const char gasDirection = gasPercent == 0 ? '-' :
         (gasPercent < 0 ? OSD_ARROW_DOWN : OSD_ARROW_UP);
 
-    if (armed && !m_lastArmedState)
+    const bool gasGateEnabled = roverGasSafetyGateEnabled();
+    const bool gasGateSatisfied = roverGasSafetyGateSatisfied();
+    if (armed && gasGateSatisfied && (!m_lastArmedState || !m_lastGasGateSatisfied))
         m_engineStartBlinkStartedAt = now;
     else if (!armed)
         m_engineStartBlinkStartedAt = 0;
     m_lastArmedState = armed;
+    m_lastGasGateSatisfied = gasGateSatisfied;
 
     char steeringText[16];
     char gasText[16];
@@ -279,15 +320,36 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
         batteryText[sizeof(batteryText) - 1] = '\0';
     }
     const bool lowBatteryWarning = updateLowBatteryWarning(now, voltageValid, displayedCentivolts);
+    const bool failsafeActive = failsafe;
+    const bool startFirstActive = !failsafeActive && gasGateEnabled && !armed && gasPercent != 0;
+    const bool gasToCenterActive = !failsafeActive && !startFirstActive &&
+                                   gasGateEnabled && armed && !gasGateSatisfied;
+    const bool returnNowActive = !failsafeActive && !startFirstActive &&
+                                 !gasToCenterActive && lowBatteryWarning;
+    const bool failsafeBlinkVisible = (now / FAILSAFE_BLINK_INTERVAL_MS) % 2 == 0;
+    const bool startFirstBlinkVisible = (now / START_FIRST_BLINK_INTERVAL_MS) % 2 == 0;
+    const bool gasToCenterBlinkVisible = (now / GAS_TO_CENTER_BLINK_INTERVAL_MS) % 2 == 0;
+    const bool returnNowBlinkVisible = (now / LOW_BATTERY_BLINK_INTERVAL_MS) % 2 == 0;
+
     const char *stateText = nullptr;
-    if (failsafe)
+    if (failsafeActive)
     {
-        if ((now / FAILSAFE_BLINK_INTERVAL_MS) % 2 == 0)
+        if (failsafeBlinkVisible)
             stateText = "FAILSAFE";
     }
-    else if (lowBatteryWarning)
+    else if (startFirstActive)
     {
-        if ((now / LOW_BATTERY_BLINK_INTERVAL_MS) % 2 == 0)
+        if (startFirstBlinkVisible)
+            stateText = "START FIRST";
+    }
+    else if (gasToCenterActive)
+    {
+        if (gasToCenterBlinkVisible)
+            stateText = "GAS TO CENTER";
+    }
+    else if (returnNowActive)
+    {
+        if (returnNowBlinkVisible)
             stateText = "RETURN NOW";
     }
     else if (!armed)
@@ -317,17 +379,27 @@ void SerialDisplayport::renderRoverOsd(bool armed, const uint32_t *channelData)
     sendDisplayPortString(0, centerColumn(craftName), craftName);
     if (stateText != nullptr)
         sendDisplayPortString(OSD_CENTER_ROW, centerColumn(stateText), stateText);
-    sendDisplayPortString(13, 1, batteryText);
+    if (!returnNowActive || returnNowBlinkVisible)
+        sendDisplayPortString(13, 1, batteryText);
+    sendDisplayPortString(13, rightColumn(m_driveTimerText), m_driveTimerText);
     sendDisplayPortString(15, 1, steeringText);
-    sendDisplayPortString(16, 1, gasText);
-    sendDisplayPortString(15, rightColumn(rssiText), rssiText);
-    sendDisplayPortString(16, rightColumn(lqText), lqText);
+    if ((!startFirstActive || startFirstBlinkVisible) &&
+        (!gasToCenterActive || gasToCenterBlinkVisible))
+        sendDisplayPortString(16, 1, gasText);
+    if (!failsafeActive || failsafeBlinkVisible)
+    {
+        sendDisplayPortString(15, rightColumn(rssiText), rssiText);
+        sendDisplayPortString(16, rightColumn(lqText), lqText);
+    }
     sendDisplayPort(MSP_DP_DRAW_SCREEN);
 }
 
 uint32_t SerialDisplayport::sendRCFrame(bool frameAvailable, bool frameMissed, uint32_t *channelData)
 {
-    bool armed = getArmedState();
+    const uint32_t now = millis();
+    const bool roverArmed = isArmed;
+    const bool armed = getArmedState();
+    updateDriveTimer(now, roverArmed);
 
     msp_status_t status;
     status.task_delta_time = 0;
@@ -348,16 +420,16 @@ uint32_t SerialDisplayport::sendRCFrame(bool frameAvailable, bool frameMissed, u
     // Send extended status MSP
     send(MSP_STATUS_EX, &status, sizeof(status));
 
-    if (m_receivedBytes >= 6 && millis() - m_lastBatteryTransaction >= MSP_BATTERY_PERIOD_MS)
+    if (m_receivedBytes >= 6 && now - m_lastBatteryTransaction >= MSP_BATTERY_PERIOD_MS)
     {
         sendBatteryTelemetry();
-        m_lastBatteryTransaction = millis();
+        m_lastBatteryTransaction = now;
     }
 
-    if (config.GetRoverOsdEnabled() && m_receivedBytes >= 6 && millis() - m_lastOsdTransaction >= OSD_UPDATE_INTERVAL_MS)
+    if (config.GetRoverOsdEnabled() && m_receivedBytes >= 6 && now - m_lastOsdTransaction >= OSD_UPDATE_INTERVAL_MS)
     {
-        renderRoverOsd(armed, channelData);
-        m_lastOsdTransaction = millis();
+        renderRoverOsd(roverArmed, channelData);
+        m_lastOsdTransaction = now;
     }
 
     return MSP_MSG_PERIOD_MS;   // Send MSP msgs to DJI at 10Hz

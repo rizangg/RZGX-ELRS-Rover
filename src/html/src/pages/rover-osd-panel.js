@@ -48,7 +48,7 @@ class RoverOsdPanel extends LitElement {
                             <option value="${cells}" ?selected=${this.cellCount === cells}>${cells}S</option>
                         `)}
                     </select>
-                    <label for="rover-voltage-mode">Voltage Mode</label>
+                    <label for="rover-voltage-mode">Voltage Sensing Mode</label>
                 </div>
 
                 <div class="mui-panel info-bg">

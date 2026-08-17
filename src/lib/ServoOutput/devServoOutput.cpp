@@ -6,6 +6,7 @@
 #include "config.h"
 #include "crsf_protocol.h"
 #include "logging.h"
+#include "options.h"
 #include "rxtx_intf.h"
 
 static int8_t servoPins[PWM_MAX_CHANNELS];
@@ -22,8 +23,49 @@ const uint8_t RMT_MAX_CHANNELS = 8;
 static bool newChannelsAvailable;
 // Absolute max failsafe time if no update is received, regardless of LQ
 static constexpr uint32_t FAILSAFE_ABS_TIMEOUT_MS = 1000U;
+static constexpr uint8_t ROVER_GAS_INPUT_CHANNEL = 1;
+static constexpr uint16_t ROVER_GAS_NEUTRAL_MIN_US = 1450U;
+static constexpr uint16_t ROVER_GAS_NEUTRAL_MAX_US = 1550U;
+static constexpr char ROVER_ER5_PRODUCT_NAME[] = "RadioMaster ER5A/C V2 2.4GHz PWM RX";
+static bool roverGasNeutralGateSatisfied = false;
 
 typedef void (*servoWrite_fn)(uint8_t ch, uint16_t us);
+
+bool roverGasSafetyGateEnabled()
+{
+    return strcmp(product_name, ROVER_ER5_PRODUCT_NAME) == 0;
+}
+
+bool roverGasSafetyGateSatisfied()
+{
+    return !roverGasSafetyGateEnabled() || roverGasNeutralGateSatisfied;
+}
+
+static void updateRoverGasSafetyGate()
+{
+    if (!roverGasSafetyGateEnabled())
+    {
+        roverGasNeutralGateSatisfied = false;
+        return;
+    }
+
+    if (!isArmed)
+    {
+        roverGasNeutralGateSatisfied = false;
+        return;
+    }
+
+    if (roverGasNeutralGateSatisfied)
+        return;
+
+    const unsigned crsfVal = ChannelData[ROVER_GAS_INPUT_CHANNEL];
+    if (crsfVal == CRSF_CHANNEL_VALUE_UNSET)
+        return;
+
+    const uint16_t gasUs = CRSF_to_US(crsfVal);
+    if (gasUs >= ROVER_GAS_NEUTRAL_MIN_US && gasUs <= ROVER_GAS_NEUTRAL_MAX_US)
+        roverGasNeutralGateSatisfied = true;
+}
 
 void ICACHE_RAM_ATTR servoNewChannelsAvailable()
 {
@@ -124,6 +166,11 @@ static void servoWrite(uint8_t ch, uint16_t us)
 
 static void servosFailsafe()
 {
+    // Require GAS to return to neutral after every link failsafe before
+    // allowing logical CH2 output to resume.
+    if (roverGasSafetyGateEnabled())
+        roverGasNeutralGateSatisfied = false;
+
     for (int ch = 0 ; ch < GPIO_PIN_PWM_OUTPUTS_COUNT ; ++ch)
     {
         const rx_config_pwm_t *chConfig = config.GetPwmChannel(ch);
@@ -143,7 +190,7 @@ static void servosFailsafe()
     }
 }
 
-static void servoCalcAllChannels(servoWrite_fn write)
+static void servoCalcAllChannels(servoWrite_fn write, bool enforceRoverGasGate)
 {
     for (int ch = 0 ; ch < GPIO_PIN_PWM_OUTPUTS_COUNT ; ++ch)
     {
@@ -153,6 +200,14 @@ static void servoCalcAllChannels(servoWrite_fn write)
         // received yet. Delay initializing the servo until the channel is valid
         if (crsfVal == CRSF_CHANNEL_VALUE_UNSET)
         {
+            continue;
+        }
+
+        const eServoOutputMode chMode = static_cast<eServoOutputMode>(chConfig->val.mode);
+        if (enforceRoverGasGate && chConfig->val.inputChannel == ROVER_GAS_INPUT_CHANNEL &&
+            chMode <= somDShot3D && !roverGasSafetyGateSatisfied())
+        {
+            write(ch, 0);
             continue;
         }
 
@@ -189,7 +244,7 @@ static void servoUsToFailsafeConfig(uint8_t ch, uint16_t us)
 
 void servoCurrentToFailsafeConfig()
 {
-    servoCalcAllChannels(&servoUsToFailsafeConfig);
+    servoCalcAllChannels(&servoUsToFailsafeConfig, false);
 }
 
 static void servosUpdate(unsigned long now)
@@ -200,7 +255,8 @@ static void servosUpdate(unsigned long now)
     {
         newChannelsAvailable = false;
         lastUpdate = now;
-        servoCalcAllChannels(&servoWrite);
+        updateRoverGasSafetyGate();
+        servoCalcAllChannels(&servoWrite, true);
     }     /* if newChannelsAvailable */
 
     // LQ goes to 0 (100 packets missed in a row)
